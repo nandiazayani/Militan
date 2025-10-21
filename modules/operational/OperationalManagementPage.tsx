@@ -136,24 +136,29 @@ const OperationalManagementPage: React.FC = () => {
 
     const renderIndividualView = () => {
         const reportStatus = todaysReport?.status;
-        const isReviewed = reportStatus === DailyReportStatus.Reviewed;
 
-        let buttonText = 'Buat Laporan';
-        if (reportStatus === DailyReportStatus.Draft) buttonText = 'Lanjutkan Laporan';
-        else if (reportStatus === DailyReportStatus.Submitted) buttonText = 'Revisi Laporan';
-        else if (reportStatus === DailyReportStatus.Revision) buttonText = 'Revisi Laporan';
-        else if (reportStatus === DailyReportStatus.Reviewed) buttonText = 'Lihat Laporan';
+        const getReportButtonProps = () => {
+            switch (reportStatus) {
+                case DailyReportStatus.Draft:
+                case DailyReportStatus.Revision:
+                    return { text: reportStatus === 'Draft' ? 'Lanjutkan Laporan' : 'Revisi Laporan', className: 'bg-primary hover:bg-yellow-500 text-black', disabled: false };
+                case DailyReportStatus.Submitted:
+                    return { text: 'Laporan Terkirim', className: 'bg-gray-600 text-white', disabled: true };
+                case DailyReportStatus.Reviewed:
+                    return { text: 'Lihat Laporan', className: 'bg-gray-600 hover:bg-gray-500 text-white', disabled: false };
+                default: // No report yet
+                    return { text: 'Buat Laporan', className: 'bg-primary hover:bg-yellow-500 text-black', disabled: false };
+            }
+        };
 
+        const buttonProps = getReportButtonProps();
+        
         const statusStyles: { [key in DailyReportStatus]?: string } = {
             [DailyReportStatus.Draft]: 'text-yellow-400',
             [DailyReportStatus.Submitted]: 'text-green-400',
             [DailyReportStatus.Revision]: 'text-orange-400',
             [DailyReportStatus.Reviewed]: 'text-blue-400',
         };
-        
-        const buttonClass = isReviewed
-            ? 'bg-gray-600 hover:bg-gray-500 text-white' // Tertiary, view-only style
-            : 'bg-primary hover:bg-yellow-500 text-black'; // Primary action style
 
         return (
             <>
@@ -181,10 +186,10 @@ const OperationalManagementPage: React.FC = () => {
                             <p className={`font-bold text-lg ${reportStatus ? statusStyles[reportStatus] : 'text-gray-500'}`}>{reportStatus || 'Belum Dibuat'}</p>
                              <button 
                                 onClick={() => setIsReportModalOpen(true)}
-                                disabled={isReviewed}
-                                className={`mt-3 w-full py-3 font-bold rounded-lg transition ${buttonClass} disabled:opacity-50 disabled:cursor-not-allowed`}
+                                className={`mt-3 w-full py-3 font-bold rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed ${buttonProps.className}`}
+                                disabled={buttonProps.disabled}
                              >
-                                {buttonText}
+                                {buttonProps.text}
                              </button>
                         </div>
                     </div>
@@ -417,16 +422,6 @@ const OperationalManagementPage: React.FC = () => {
                         </div>
                     </div>
                 )}
-
-                <DailyReportModal 
-                    isOpen={isReportModalOpen}
-                    onClose={() => setIsReportModalOpen(false)}
-                    onSave={handleSaveReport}
-                    userId={currentUser.id}
-                    date={todayStr}
-                    existingReport={todaysReport}
-                    readOnly={todaysReport?.status === DailyReportStatus.Reviewed}
-                />
             </>
         );
     };
@@ -437,6 +432,15 @@ const OperationalManagementPage: React.FC = () => {
                 ? renderManagementView()
                 : renderIndividualView()
             }
+            <DailyReportModal 
+                isOpen={isReportModalOpen}
+                onClose={() => setIsReportModalOpen(false)}
+                onSave={handleSaveReport}
+                userId={currentUser.id}
+                date={todayStr}
+                existingReport={todaysReport}
+                readOnly={todaysReport?.status === DailyReportStatus.Reviewed}
+            />
         </div>
     );
 };
