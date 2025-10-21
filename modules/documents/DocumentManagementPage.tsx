@@ -1,259 +1,276 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { MOCK_DOCUMENTS } from '../../constants/mockData';
-// Fix: Import specific types for stronger type checking.
-import { Document, DocumentCategory, DocumentFileType } from '../../types';
 
-const AddDocumentModal: React.FC<{ 
-    isOpen: boolean; 
-    onClose: () => void; 
-    onSave: (doc: Document) => void;
-    selectedFile: File | null;
-}> = ({ isOpen, onClose, onSave, selectedFile }) => {
+import React, { useState, useContext } from 'react';
+import { DataContext, UserContext } from '../../App';
+import { Document, DocumentCategory, DocumentFileType, UserRole } from '../../types';
+import { GoogleGenAI } from "@google/genai";
+
+
+// Modal for adding/editing a document
+const DocumentModal: React.FC<{
+    isOpen: boolean;
+    onClose: () => void;
+    onSave: (document: Document) => void;
+    document: Document | null;
+}> = ({ isOpen, onClose, onSave, document }) => {
     const [name, setName] = useState('');
     const [description, setDescription] = useState('');
-    // Fix: Use the imported DocumentCategory type for state.
-    const [category, setCategory] = useState<DocumentCategory>('Venue');
-    // Fix: Use the imported DocumentFileType type for state.
+    const [category, setCategory] = useState<DocumentCategory>('Konsep');
     const [fileType, setFileType] = useState<DocumentFileType>('PDF');
     const [tags, setTags] = useState('');
+    const [isGenerating, setIsGenerating] = useState(false);
 
-    useEffect(() => {
-        if (selectedFile) {
-            const fileNameWithoutExt = selectedFile.name.substring(0, selectedFile.name.lastIndexOf('.')) || selectedFile.name;
-            setName(fileNameWithoutExt);
 
-            const extension = selectedFile.name.split('.').pop()?.toLowerCase();
-            if (extension === 'pdf') {
-                setFileType('PDF');
-            } else if (['doc', 'docx'].includes(extension || '')) {
-                setFileType('DOCX');
-            } else if (['jpg', 'jpeg', 'png'].includes(extension || '')) {
-                setFileType('JPG');
-            }
+    React.useEffect(() => {
+        if (document) {
+            setName(document.name);
+            setDescription(document.description);
+            setCategory(document.category);
+            setFileType(document.fileType);
+            setTags(document.tags.join(', '));
+        } else {
+            setName('');
+            setDescription('');
+            setCategory('Konsep');
+            setFileType('PDF');
+            setTags('');
         }
-    }, [selectedFile]);
+    }, [document, isOpen]);
 
-    const handleResetAndClose = () => {
-        setName('');
-        setDescription('');
-        setCategory('Venue');
-        setFileType('PDF');
-        setTags('');
-        onClose();
-    };
-
-    const handleSubmit = () => {
-        if (!name || !category || !fileType) {
-            alert('Harap isi semua kolom yang wajib diisi.');
+    const handleGenerateDescription = async () => {
+        if (!name.trim()) {
+            alert("Harap isi Nama Dokumen terlebih dahulu untuk membuat deskripsi.");
             return;
         }
-        
+        setIsGenerating(true);
+        try {
+            const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
+            const prompt = `Buat deskripsi singkat dan profesional (sekitar 20-30 kata) untuk sebuah dokumen dengan detail berikut:
+- Nama Dokumen: "${name}"
+- Kategori Dokumen: "${category}"
+
+Deskripsi harus menjelaskan isi dan tujuan utama dokumen secara ringkas dalam Bahasa Indonesia.`;
+
+            const response = await ai.models.generateContent({
+                model: 'gemini-2.5-flash',
+                contents: prompt,
+            });
+            
+            setDescription(response.text);
+
+        } catch (err) {
+            console.error("Gemini description generation error:", err);
+            alert("Gagal membuat deskripsi. Silakan coba lagi.");
+        } finally {
+            setIsGenerating(false);
+        }
+    };
+
+
+    const handleSave = () => {
+        if (!name.trim() || !description.trim()) {
+            alert('Nama dan deskripsi dokumen harus diisi.');
+            return;
+        }
         const newDocument: Document = {
-            id: `d${Date.now()}`,
+            id: document?.id || `d${Date.now()}`,
             name,
             description,
             category,
             fileType,
-            version: 1,
+            version: document?.version || 1,
             lastUpdated: new Date().toISOString().split('T')[0],
-            tags: tags.split(',').map(tag => tag.trim()).filter(tag => tag),
+            tags: tags.split(',').map(t => t.trim()).filter(Boolean),
         };
         onSave(newDocument);
-        handleResetAndClose();
+        onClose();
     };
 
     if (!isOpen) return null;
 
-    const categories: DocumentCategory[] = ['Venue', 'Konsep', 'Talent', 'Vendor', 'MOU & SPK', 'Invoice & Kuitansi', 'Legalitas'];
-
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-md">
-                <h3 className="text-xl font-bold mb-4 dark:text-white">Detail Dokumen</h3>
-                 {selectedFile && (
-                    <div className="mb-4 p-3 bg-blue-50 dark:bg-gray-700 border border-blue-200 dark:border-blue-800 rounded-lg text-sm">
-                        <p className="text-gray-600 dark:text-gray-300">File yang dipilih:</p>
-                        <p className="font-semibold text-primary">{selectedFile.name}</p>
-                    </div>
-                )}
-                <div className="space-y-4">
+            <div className="bg-surface rounded-lg shadow-xl p-6 w-full max-w-md">
+                <h3 className="text-xl font-bold mb-4 text-white">{document ? 'Edit Dokumen' : 'Tambah Dokumen Baru'}</h3>
+                <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-2">
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Nama Dokumen</label>
-                        <input type="text" value={name} onChange={(e) => setName(e.target.value)} className="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary text-gray-900 dark:text-gray-100" />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Description / Note</label>
-                        <textarea
-                            value={description}
-                            onChange={(e) => setDescription(e.target.value)}
-                            rows={3}
-                            placeholder="Berikan informasi singkat tentang dokumen ini..."
-                            className="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary text-gray-900 dark:text-gray-100"
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Kategori</label>
-                        {/* Fix: Replace `as any` with specific type assertion. */}
-                        <select value={category} onChange={(e) => setCategory(e.target.value as DocumentCategory)} className="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary text-gray-900 dark:text-gray-100">
-                            {categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
-                        </select>
+                        <label className="block text-sm font-medium text-gray-300">Nama Dokumen</label>
+                        <input type="text" value={name} onChange={(e) => setName(e.target.value)} className="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary text-gray-100" />
                     </div>
                      <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Tipe File</label>
-                        {/* Fix: Replace `as any` with specific type assertion. */}
-                        <select value={fileType} onChange={(e) => setFileType(e.target.value as DocumentFileType)} className="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary text-gray-900 dark:text-gray-100">
-                            <option value="PDF">PDF</option>
-                            <option value="DOCX">DOCX</option>
-                            <option value="JPG">JPG</option>
-                        </select>
+                        <div className="flex justify-between items-center mb-1">
+                            <label className="block text-sm font-medium text-gray-300">Deskripsi</label>
+                            <button
+                                onClick={handleGenerateDescription}
+                                disabled={isGenerating || !name.trim()}
+                                className="flex items-center gap-1 px-2 py-1 text-xs bg-secondary/20 text-gray-300 rounded-md hover:bg-secondary/30 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                            >
+                                {isGenerating ? <SpinnerIcon/> : <SparklesIcon />}
+                                <span>Buat dengan AI</span>
+                            </button>
+                        </div>
+                        <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3} className="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary text-gray-100" disabled={isGenerating}></textarea>
                     </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Tags (pisahkan dengan koma)</label>
-                        <input type="text" value={tags} onChange={(e) => setTags(e.target.value)} placeholder="e.g., jogja, legal, 2024" className="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary text-gray-900 dark:text-gray-100" />
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-300">Kategori</label>
+                            <select value={category} onChange={(e) => setCategory(e.target.value as DocumentCategory)} className="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary text-gray-100">
+                                {['Venue', 'Konsep', 'Talent', 'Vendor', 'MOU & SPK', 'Invoice & Kuitansi', 'Legalitas'].map(c => <option key={c} value={c}>{c}</option>)}
+                            </select>
+                        </div>
+                         <div>
+                            <label className="block text-sm font-medium text-gray-300">Tipe File</label>
+                            <select value={fileType} onChange={(e) => setFileType(e.target.value as DocumentFileType)} className="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary text-gray-100">
+                                {['PDF', 'DOCX', 'JPG'].map(t => <option key={t} value={t}>{t}</option>)}
+                            </select>
+                        </div>
+                    </div>
+                     <div>
+                        <label className="block text-sm font-medium text-gray-300">Tags (pisahkan dengan koma)</label>
+                        <input type="text" value={tags} onChange={(e) => setTags(e.target.value)} className="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary text-gray-100" />
                     </div>
                 </div>
                 <div className="mt-6 flex justify-end gap-3">
-                    <button onClick={handleResetAndClose} className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-100 dark:hover:bg-gray-500">Batal</button>
-                    <button onClick={handleSubmit} className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-blue-700">Simpan</button>
+                    <button onClick={onClose} className="px-4 py-2 bg-gray-600 text-gray-100 rounded-lg hover:bg-gray-500">Batal</button>
+                    <button onClick={handleSave} className="px-4 py-2 bg-primary text-black font-semibold rounded-lg hover:bg-yellow-500">Simpan</button>
                 </div>
             </div>
         </div>
     );
 };
 
-
-const DocumentManagementPage: React.FC = () => {
-    const [documents, setDocuments] = useState<Document[]>(MOCK_DOCUMENTS);
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [searchTerm, setSearchTerm] = useState('');
-    const [filterCategory, setFilterCategory] = useState('All');
-    const [selectedFile, setSelectedFile] = useState<File | null>(null);
-    const fileInputRef = useRef<HTMLInputElement>(null);
-
-    const handleSaveDocument = (newDocument: Document) => {
-        setDocuments([newDocument, ...documents]);
-    };
-
-    const handleUploadClick = () => {
-        fileInputRef.current?.click();
-    };
-
-    const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        const file = event.target.files?.[0];
-        if (file) {
-            setSelectedFile(file);
-            setIsModalOpen(true);
-        }
-    };
-
-    const handleModalClose = () => {
-        setIsModalOpen(false);
-        setSelectedFile(null);
-        if (fileInputRef.current) {
-            fileInputRef.current.value = '';
-        }
-    };
-
-    const categories = ['All', ...Array.from(new Set(MOCK_DOCUMENTS.map(doc => doc.category)))];
-
-    const filteredDocuments = documents.filter(doc => {
-        const matchesCategory = filterCategory === 'All' || doc.category === filterCategory;
-        const matchesSearch = doc.name.toLowerCase().includes(searchTerm.toLowerCase()) || doc.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
-        return matchesCategory && matchesSearch;
-    });
-
-    const getFileIcon = (fileType: 'PDF' | 'DOCX' | 'JPG') => {
-        switch (fileType) {
-            case 'PDF': return <FilePdfIcon />;
-            case 'DOCX': return <FileDocxIcon />;
-            case 'JPG': return <FileJpgIcon />;
-            default: return <FileDefaultIcon />;
-        }
-    }
-
+const DeleteConfirmationModal: React.FC<{
+    isOpen: boolean;
+    onClose: () => void;
+    onConfirm: () => void;
+    documentName?: string;
+}> = ({ isOpen, onClose, onConfirm, documentName }) => {
+    if (!isOpen) return null;
     return (
-        <div className="bg-surface dark:bg-gray-800 rounded-xl shadow-lg p-6">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
-                <h2 className="text-2xl font-bold text-text-primary dark:text-gray-100">Document Management</h2>
-                <div className="flex items-center gap-2">
-                    <input
-                        type="text"
-                        placeholder="Cari dokumen..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 dark:border-gray-600"
-                    />
-                     <select
-                        value={filterCategory}
-                        onChange={(e) => setFilterCategory(e.target.value)}
-                        className="px-4 py-2 border border-gray-300 rounded-lg bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-primary text-gray-900 dark:text-gray-100 dark:border-gray-600"
-                    >
-                        {categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
-                    </select>
-                    <input
-                        type="file"
-                        ref={fileInputRef}
-                        onChange={handleFileChange}
-                        className="hidden"
-                        accept=".pdf,.docx,.jpg,.jpeg,.png"
-                    />
-                    <button onClick={handleUploadClick} className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-blue-700 transition whitespace-nowrap">
-                        Unggah Dokumen
-                    </button>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+            <div className="bg-surface rounded-lg shadow-xl p-6 w-full max-w-sm">
+                <h3 className="text-lg font-bold mb-2 text-white">Konfirmasi Penghapusan</h3>
+                <p className="text-gray-300 mb-6">
+                    Apakah Anda yakin ingin menghapus dokumen <strong className="text-white">{documentName || 'ini'}</strong>? Tindakan ini tidak dapat diurungkan.
+                </p>
+                <div className="flex justify-end gap-3">
+                    <button onClick={onClose} className="px-4 py-2 bg-gray-600 text-gray-100 rounded-lg hover:bg-gray-500">Batal</button>
+                    <button onClick={onConfirm} className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">Hapus</button>
                 </div>
             </div>
+        </div>
+    );
+};
 
+const DocumentManagementPage: React.FC = () => {
+    const dataContext = useContext(DataContext);
+    const userContext = useContext(UserContext);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [editingDocument, setEditingDocument] = useState<Document | null>(null);
+    const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+    const [documentToDelete, setDocumentToDelete] = useState<Document | null>(null);
+
+    if (!dataContext || !userContext) {
+        return <div>Memuat data dokumen...</div>;
+    }
+
+    const { allDocuments, addDocument, updateDocument, deleteDocument } = dataContext;
+    const { user } = userContext;
+    const canManageDocuments = user.role === UserRole.Admin || user.role === UserRole.Manager;
+
+    const handleAddDocument = () => {
+        setEditingDocument(null);
+        setIsModalOpen(true);
+    };
+    
+    const handleEditDocument = (doc: Document) => {
+        setEditingDocument(doc);
+        setIsModalOpen(true);
+    };
+
+    const handleSaveDocument = async (savedDocument: Document) => {
+        const isEditing = allDocuments.some(d => d.id === savedDocument.id);
+        const docToSave = isEditing ? { ...savedDocument, version: savedDocument.version + 1 } : savedDocument;
+        
+        if (isEditing) {
+            await updateDocument(docToSave);
+        } else {
+            await addDocument(docToSave);
+        }
+        setIsModalOpen(false);
+    };
+    
+    const handleDeleteClick = (doc: Document) => {
+        setDocumentToDelete(doc);
+        setIsDeleteConfirmOpen(true);
+    };
+
+    const confirmDeleteDocument = async () => {
+        if (documentToDelete) {
+            await deleteDocument(documentToDelete.id);
+        }
+        setIsDeleteConfirmOpen(false);
+        setDocumentToDelete(null);
+    };
+
+    return (
+        <div className="bg-surface rounded-xl shadow-lg p-6">
+            <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-bold text-text-primary">Document Management</h2>
+                {canManageDocuments && (
+                    <button onClick={handleAddDocument} className="px-4 py-2 bg-primary text-black font-semibold rounded-lg hover:bg-yellow-500 transition">
+                        Tambah Dokumen Baru
+                    </button>
+                )}
+            </div>
             <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                    <thead className="bg-gray-50 dark:bg-gray-700/50">
+                <table className="min-w-full divide-y divide-gray-700">
+                    <thead className="bg-gray-700/50">
                         <tr>
-                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Nama Dokumen</th>
-                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Kategori</th>
-                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Versi</th>
-                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Update Terakhir</th>
-                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Tags</th>
-                            <th scope="col" className="relative px-6 py-3"><span className="sr-only">Aksi</span></th>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Nama Dokumen</th>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Kategori</th>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Versi</th>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Update Terakhir</th>
+                            {canManageDocuments && <th scope="col" className="relative px-6 py-3"><span className="sr-only">Aksi</span></th>}
                         </tr>
                     </thead>
-                    <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                        {filteredDocuments.map((doc: Document) => (
+                    <tbody className="bg-surface divide-y divide-gray-700">
+                        {allDocuments.map((doc: Document) => (
                             <tr key={doc.id}>
                                 <td className="px-6 py-4 whitespace-nowrap">
-                                    <div className="flex items-center">
-                                        <div className="text-red-500 mr-3">{getFileIcon(doc.fileType)}</div>
-                                        <span className="text-sm font-medium text-gray-900 dark:text-gray-100">{doc.name}</span>
-                                    </div>
+                                    <div className="text-sm font-medium text-gray-100">{doc.name}</div>
+                                    <div className="text-xs text-gray-400">{doc.description}</div>
                                 </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{doc.category}</td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400 text-center">{doc.version}</td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{doc.lastUpdated}</td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                                    <div className="flex flex-wrap gap-1">
-                                        {doc.tags.map(tag => <span key={tag} className="px-2 py-0.5 text-xs bg-gray-100 dark:bg-gray-600 text-gray-800 dark:text-gray-200 rounded-full">{tag}</span>)}
-                                    </div>
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                    <button onClick={() => alert(`Fitur unduh untuk ${doc.name} belum tersedia.`)} className="text-primary hover:text-blue-700">Unduh</button>
-                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-400">{doc.category}</td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-400">v{doc.version}</td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-400">{doc.lastUpdated}</td>
+                                {canManageDocuments && (
+                                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                        <button onClick={() => handleEditDocument(doc)} className="text-primary hover:text-yellow-500 mr-4">Edit</button>
+                                        <button onClick={() => handleDeleteClick(doc)} className="text-red-500 hover:text-red-400">Hapus</button>
+                                    </td>
+                                )}
                             </tr>
                         ))}
                     </tbody>
                 </table>
             </div>
-            <AddDocumentModal
+            <DocumentModal 
                 isOpen={isModalOpen}
-                onClose={handleModalClose}
+                onClose={() => setIsModalOpen(false)}
                 onSave={handleSaveDocument}
-                selectedFile={selectedFile}
+                document={editingDocument}
+            />
+            <DeleteConfirmationModal 
+                isOpen={isDeleteConfirmOpen}
+                onClose={() => setIsDeleteConfirmOpen(false)}
+                onConfirm={confirmDeleteDocument}
+                documentName={documentToDelete?.name}
             />
         </div>
     );
 };
 
-// Simple file icons
-const FilePdfIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>;
-const FileDocxIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>;
-const FileJpgIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>;
-const FileDefaultIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>;
+const SparklesIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M5 3v4M3 5h4M6 17v4m-2-2h4m1-15l1.09 2.18L12 6l-2.18 1.09L9 9.27l-1.09-2.18L6 6l2.18-1.09L9 2.73zM18 15l-1.09-2.18L15 12l2.18-1.09L18 8.73l1.09 2.18L21 12l-2.18 1.09L18 15z" /></svg>;
+const SpinnerIcon = () => <svg className="animate-spin h-4 w-4 text-secondary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>;
 
 export default DocumentManagementPage;

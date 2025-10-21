@@ -1,3 +1,4 @@
+
 import React, { useState, useContext } from 'react';
 import { Project, ProjectStatus, User, UserRole } from '../../types';
 import { UserContext, DataContext } from '../../App';
@@ -55,16 +56,16 @@ const AddProjectModal: React.FC<{ isOpen: boolean; onClose: () => void; onSave: 
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-md">
-                <h3 className="text-xl font-bold mb-4 dark:text-white">Tambah Proyek Baru</h3>
+            <div className="bg-surface rounded-lg shadow-xl p-6 w-full max-w-md">
+                <h3 className="text-xl font-bold mb-4 text-white">Tambah Proyek Baru</h3>
                 <div className="space-y-4">
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Nama Proyek</label>
-                        <input type="text" value={name} onChange={(e) => setName(e.target.value)} className="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary text-gray-900 dark:text-gray-100" />
+                        <label className="block text-sm font-medium text-gray-300">Nama Proyek</label>
+                        <input type="text" value={name} onChange={(e) => setName(e.target.value)} className="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary text-gray-100" />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Person in Charge (PIC)</label>
-                        <select value={picId} onChange={(e) => setPicId(e.target.value)} className="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary text-gray-900 dark:text-gray-100">
+                        <label className="block text-sm font-medium text-gray-300">Person in Charge (PIC)</label>
+                        <select value={picId} onChange={(e) => setPicId(e.target.value)} className="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary text-gray-100">
                             <option value="">-- Pilih PIC --</option>
                             {allUsers.filter(u => u.role === UserRole.Manager || u.role === UserRole.Staff).map(user => (
                                 <option key={user.id} value={user.id}>{user.name}</option>
@@ -73,22 +74,22 @@ const AddProjectModal: React.FC<{ isOpen: boolean; onClose: () => void; onSave: 
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Tanggal Mulai</label>
-                            <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary text-gray-900 dark:text-gray-100" />
+                            <label className="block text-sm font-medium text-gray-300">Tanggal Mulai</label>
+                            <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary text-gray-100" />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Tanggal Selesai</label>
-                            <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary text-gray-900 dark:text-gray-100" />
+                            <label className="block text-sm font-medium text-gray-300">Tanggal Selesai</label>
+                            <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary text-gray-100" />
                         </div>
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Modal Anggaran</label>
-                        <input type="number" value={modal} onChange={(e) => setModal(Number(e.target.value))} className="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary text-gray-900 dark:text-gray-100" />
+                        <label className="block text-sm font-medium text-gray-300">Modal Anggaran</label>
+                        <input type="number" value={modal} onChange={(e) => setModal(Number(e.target.value))} className="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary text-gray-100" />
                     </div>
                 </div>
                 <div className="mt-6 flex justify-end gap-3">
-                    <button onClick={onClose} className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-100 dark:hover:bg-gray-500">Batal</button>
-                    <button onClick={handleSubmit} className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-blue-700">Simpan</button>
+                    <button onClick={onClose} className="px-4 py-2 bg-gray-600 text-gray-100 rounded-lg hover:bg-gray-500">Batal</button>
+                    <button onClick={handleSubmit} className="px-4 py-2 bg-primary text-black rounded-lg hover:bg-yellow-500 font-semibold">Simpan</button>
                 </div>
             </div>
         </div>
@@ -96,13 +97,13 @@ const AddProjectModal: React.FC<{ isOpen: boolean; onClose: () => void; onSave: 
 };
 
 const SummaryCard: React.FC<{ title: string; value: string; icon: React.ReactNode }> = ({ title, value, icon }) => (
-    <div className="bg-gray-50 dark:bg-gray-700/50 p-4 rounded-lg flex items-center shadow-sm">
-        <div className="p-3 rounded-full bg-blue-100 text-primary mr-4">
+    <div className="bg-gray-700/50 p-4 rounded-lg flex items-center shadow-sm">
+        <div className="p-3 rounded-full bg-primary/20 text-primary mr-4">
             {icon}
         </div>
         <div>
-            <p className="text-sm text-gray-500 dark:text-gray-400">{title}</p>
-            <p className="text-xl font-bold text-gray-900 dark:text-gray-100">{value}</p>
+            <p className="text-sm text-gray-400">{title}</p>
+            <p className="text-xl font-bold text-gray-100">{value}</p>
         </div>
     </div>
 );
@@ -123,13 +124,13 @@ const ProjectManagementPage: React.FC<ProjectManagementPageProps> = ({ onSelectP
     const totalBudget = allProjects.reduce((sum, p) => sum + p.budget.modal, 0);
 
     return (
-        <div className="bg-surface dark:bg-gray-800 rounded-xl shadow-lg p-6">
+        <div className="bg-surface rounded-xl shadow-lg p-6">
             <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-bold text-text-primary dark:text-gray-100">Project Management</h2>
+                <h2 className="text-2xl font-bold text-text-primary">Project Management</h2>
                 {canAddProject && (
                     <button 
                         onClick={() => setIsModalOpen(true)} 
-                        className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-blue-700 transition shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
+                        className="flex items-center gap-2 px-4 py-2 bg-primary text-black font-semibold rounded-lg hover:bg-yellow-500 transition shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
                     >
                         <PlusIcon />
                         <span>Tambah Proyek Baru</span>
@@ -144,21 +145,21 @@ const ProjectManagementPage: React.FC<ProjectManagementPageProps> = ({ onSelectP
             </div>
 
             <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                    <thead className="bg-gray-50 dark:bg-gray-700/50">
+                <table className="min-w-full divide-y divide-gray-700">
+                    <thead className="bg-gray-700/50">
                         <tr>
-                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Nama Proyek</th>
-                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">PIC</th>
-                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Status</th>
-                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Tanggal Selesai</th>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Nama Proyek</th>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">PIC</th>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Status</th>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Tanggal Selesai</th>
                             <th scope="col" className="relative px-6 py-3"><span className="sr-only">Aksi</span></th>
                         </tr>
                     </thead>
-                    <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                    <tbody className="bg-surface divide-y divide-gray-700">
                         {allProjects.map((project: Project) => (
                             <tr key={project.id}>
                                 <td className="px-6 py-4 whitespace-nowrap">
-                                    <div className="text-sm font-medium text-gray-900 dark:text-gray-100">{project.name}</div>
+                                    <div className="text-sm font-medium text-gray-100">{project.name}</div>
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap">
                                     <div className="flex items-center">
@@ -166,16 +167,16 @@ const ProjectManagementPage: React.FC<ProjectManagementPageProps> = ({ onSelectP
                                             <img className="h-8 w-8 rounded-full" src={project.pic.avatarUrl} alt={project.pic.name} />
                                         </div>
                                         <div className="ml-3">
-                                            <div className="text-sm text-gray-900 dark:text-gray-100">{project.pic.name}</div>
+                                            <div className="text-sm text-gray-100">{project.pic.name}</div>
                                         </div>
                                     </div>
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap">
                                     <ProjectStatusBadge status={project.status} />
                                 </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{project.endDate}</td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-400">{project.endDate}</td>
                                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                    <button onClick={() => onSelectProject(project.id)} className="text-primary hover:text-blue-700">Lihat Detail</button>
+                                    <button onClick={() => onSelectProject(project.id)} className="text-primary hover:text-yellow-500">Lihat Detail</button>
                                 </td>
                             </tr>
                         ))}

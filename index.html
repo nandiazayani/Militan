@@ -1,24 +1,24 @@
+
 <!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <link rel="icon" type="image/png" href="/logo.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>MILITAN DASHBOARD</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
       tailwind.config = {
-        darkMode: 'class',
         theme: {
           extend: {
             colors: {
-              'primary': '#1E3A8A', // Dark Blue
-              'secondary': '#10B981', // Green
-              'accent': '#F59E0B', // Amber
-              'background': '#F3F4F6', // Light Gray
-              'surface': '#FFFFFF',
-              'text-primary': '#1F2937',
-              'text-secondary': '#6B7280',
+              'primary': '#FDB813',      // Gold
+              'secondary': '#4B5563',     // Gray-600 for secondary actions
+              'accent': '#FDB813',        // Gold
+              'background': '#000000',    // Black
+              'surface': '#1F2937',       // Dark Charcoal
+              'text-primary': '#FFFFFF',    // White
+              'text-secondary': '#9CA3AF',  // Light Gray
             },
           },
         },
@@ -28,15 +28,19 @@
   <script type="importmap">
 {
   "imports": {
-    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
     "recharts": "https://aistudiocdn.com/recharts@^3.3.0",
+    "vite": "https://aistudiocdn.com/vite@^7.1.11",
     "react/": "https://aistudiocdn.com/react@^19.2.0/",
-    "react": "https://aistudiocdn.com/react@^19.2.0"
+    "react": "https://aistudiocdn.com/react@^19.2.0",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+    "@vitejs/plugin-react": "https://aistudiocdn.com/@vitejs/plugin-react@^5.0.4",
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.25.0"
   }
 }
 </script>
 </head>
-  <body class="bg-background text-text-primary dark:bg-gray-900 dark:text-gray-100">
+  <body class="bg-background text-text-primary">
     <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
   </body>
 </html>

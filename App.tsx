@@ -1,212 +1,245 @@
-import React, { useState, createContext, useMemo, useEffect } from 'react';
+import React, { useState, useEffect, createContext } from 'react';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
 import DashboardPage from './modules/dashboard/DashboardPage';
-import AssetManagementPage from './modules/assets/AssetManagementPage';
 import ProjectManagementPage from './modules/projects/ProjectManagementPage';
 import ProjectDetailPage from './modules/projects/ProjectDetailPage';
+import AssetManagementPage from './modules/assets/AssetManagementPage';
 import DocumentManagementPage from './modules/documents/DocumentManagementPage';
 import UserManagementPage from './modules/users/UserManagementPage';
 import UserDetailPage from './modules/users/UserDetailPage';
-import AdditionalDepartmentsPage from './modules/departments/AdditionalDepartmentsPage';
 import SettingsPage from './modules/settings/SettingsPage';
-import { User, UserRole, Project } from './types';
-import { MOCK_USERS, MOCK_PROJECTS } from './constants/mockData';
+import LoginPage from './modules/login/LoginPage';
+import GeminiPage from './modules/gemini/GeminiPage';
+import AdditionalDepartmentsPage from './modules/departments/AdditionalDepartmentsPage';
+import OperationalManagementPage from './modules/operational/OperationalManagementPage';
+import NotificationPage from './modules/notifications/NotificationPage';
+import CalendarPage from './modules/calendar/CalendarPage';
 
-type Page = 'dashboard' | 'assets' | 'projects' | 'documents' | 'users' | 'departments' | 'settings';
+import { Page, User, Project, Asset, Document as Doc, UserTask, Notification, NotificationType, DailyReport } from './types';
+import { MOCK_USERS, MOCK_PROJECTS, MOCK_ASSETS, MOCK_DOCUMENTS, MOCK_USER_TASKS, MOCK_NOTIFICATIONS, MOCK_DAILY_REPORTS } from './constants/mockData';
 
-export interface AppSettings {
-  autoSaveEnabled: boolean;
+// Contexts
+interface UserContextType {
+  user: User;
+  setUser: (user: User) => void;
 }
+export const UserContext = createContext<UserContextType | null>(null);
 
-export const UserContext = createContext<{ user: User; setUser: (user: User) => void; } | null>(null);
-export const ThemeContext = createContext<{ theme: string; toggleTheme: () => void; } | null>(null);
-export const SettingsContext = createContext<{ settings: AppSettings; setSettings: (settings: Partial<AppSettings>) => void; } | null>(null);
-export const DataContext = createContext<{
-    allUsers: User[];
-    allProjects: Project[];
-    updateUser: (updatedUser: User) => void;
-    addUser: (newUser: User) => void;
-    updateProject: (updatedProject: Project) => void;
-    addProject: (newProject: Project) => void;
-} | null>(null);
+interface DataContextType {
+  allUsers: User[];
+  allProjects: Project[];
+  allAssets: Asset[];
+  allDocuments: Doc[];
+  allUserTasks: UserTask[];
+  allNotifications: Notification[];
+  allDailyReports: DailyReport[];
+  updateUser: (user: User) => Promise<void>;
+  addProject: (project: Project) => Promise<void>;
+  updateProject: (project: Project) => Promise<void>;
+  addAsset: (asset: Asset) => Promise<void>;
+  updateAsset: (asset: Asset) => Promise<void>;
+  deleteAsset: (assetId: string) => Promise<void>;
+  addDocument: (doc: Doc) => Promise<void>;
+  updateDocument: (doc: Doc) => Promise<void>;
+  deleteDocument: (docId: string) => Promise<void>;
+  addUser: (user: User) => Promise<void>;
+  addUserTask: (task: UserTask) => Promise<void>;
+  updateUserTask: (task: UserTask) => Promise<void>;
+  deleteUserTask: (taskId: string) => Promise<void>;
+  addNotification: (type: NotificationType, message: string, link?: Notification['link']) => void;
+  markNotificationsAsRead: () => void;
+  addDailyReport: (report: DailyReport) => Promise<void>;
+  updateDailyReport: (report: DailyReport) => Promise<void>;
+}
+export const DataContext = createContext<DataContextType | null>(null);
 
+interface SettingsContextType {
+  settings: { autoSaveEnabled: boolean };
+  setSettings: (settings: { autoSaveEnabled: boolean }) => void;
+}
+export const SettingsContext = createContext<SettingsContextType | null>(null);
 
-const pageRoles: Record<Page, UserRole[]> = {
-    dashboard: [UserRole.Admin, UserRole.Manager, UserRole.Staff, UserRole.AssetManager, UserRole.Finance],
-    assets: [UserRole.Admin, UserRole.AssetManager],
-    projects: [UserRole.Admin, UserRole.Manager, UserRole.Staff, UserRole.Finance],
-    documents: [UserRole.Admin, UserRole.Manager, UserRole.Staff, UserRole.Finance],
-    users: [UserRole.Admin, UserRole.Manager, UserRole.Staff],
-    departments: [UserRole.Admin, UserRole.Manager],
-    settings: [UserRole.Admin, UserRole.Manager, UserRole.Staff, UserRole.AssetManager, UserRole.Finance],
-};
-
+// Main App Component
 const App: React.FC = () => {
-  const [currentPage, setCurrentPage] = useState<Page>('dashboard');
-  const [currentUser, setCurrentUser] = useState<User>(MOCK_USERS.find(u => u.role === UserRole.Admin)!);
-  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
-  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
-  const [theme, setTheme] = useState<'light' | 'dark'>('light');
-  const [settings, setSettings] = useState<AppSettings>({ autoSaveEnabled: true });
-  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+    // State management
+    const [user, setUser] = useState<User | null>(null);
+    const [currentPage, setCurrentPage] = useState<Page>('dashboard');
+    const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
+    const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+    const [hasUnsavedChanges, setHasUnsavedChanges] = useState<boolean>(false);
+    
+    // "Database" state
+    const [allUsers, setAllUsers] = useState<User[]>([]);
+    const [allProjects, setAllProjects] = useState<Project[]>([]);
+    const [allAssets, setAllAssets] = useState<Asset[]>([]);
+    const [allDocuments, setAllDocuments] = useState<Doc[]>([]);
+    const [allUserTasks, setAllUserTasks] = useState<UserTask[]>([]);
+    const [allNotifications, setAllNotifications] = useState<Notification[]>([]);
+    const [allDailyReports, setAllDailyReports] = useState<DailyReport[]>([]);
+    
+    const [isDataLoaded, setIsDataLoaded] = useState(false);
+    const [appError, setAppError] = useState<string | null>(null);
 
-  const [allUsers, setAllUsers] = useState<User[]>(MOCK_USERS);
-  const [allProjects, setAllProjects] = useState<Project[]>(MOCK_PROJECTS);
+    // Settings state
+    const [settings, setSettings] = useState({ autoSaveEnabled: true });
 
-  const handleUpdateUser = (updatedUser: User) => {
-      setAllUsers(prevUsers => prevUsers.map(u => (u.id === updatedUser.id ? updatedUser : u)));
-      if (currentUser.id === updatedUser.id) {
-          setCurrentUser(updatedUser);
-      }
-      // Reflect user changes in projects
-      setAllProjects(prevProjects => 
-          prevProjects.map(p => ({
-              ...p,
-              pic: p.pic.id === updatedUser.id ? updatedUser : p.pic,
-              team: p.team.map(t => (t.id === updatedUser.id ? updatedUser : t)),
-              tasks: p.tasks.map(task => ({
-                  ...task,
-                  assignee: task.assignee.id === updatedUser.id ? updatedUser : task.assignee,
-              })),
-              history: p.history?.map(h => ({
-                  ...h,
-                  user: h.user.id === updatedUser.id ? updatedUser : h.user
-              }))
-          }))
-      );
-  };
+    // Simulate API call to fetch initial data
+    useEffect(() => {
+        try {
+            // Simulate a delay
+            setTimeout(() => {
+                setAllUsers(MOCK_USERS);
+                setAllProjects(MOCK_PROJECTS);
+                setAllAssets(MOCK_ASSETS);
+                setAllDocuments(MOCK_DOCUMENTS);
+                setAllUserTasks(MOCK_USER_TASKS);
+                setAllNotifications(MOCK_NOTIFICATIONS.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()));
+                setAllDailyReports(MOCK_DAILY_REPORTS);
+                setIsDataLoaded(true);
+            }, 1000);
+        } catch (e) {
+            setAppError("Gagal memuat data awal dari server.");
+            setIsDataLoaded(true);
+        }
+    }, []);
+    
+    // Data manipulation functions (simulating API calls)
+    const createUpdater = <T extends {id: string}>(setter: React.Dispatch<React.SetStateAction<T[]>>) => async (item: T) => {
+        setter(prev => prev.map(i => i.id === item.id ? item : i));
+    };
+    const createAdder = <T,>(setter: React.Dispatch<React.SetStateAction<T[]>>) => async (item: T) => {
+        setter(prev => [item, ...prev]);
+    };
+    const createDeleter = <T extends {id: string}>(setter: React.Dispatch<React.SetStateAction<T[]>>) => async (id: string) => {
+        setter(prev => prev.filter(i => i.id !== id));
+    };
 
-  const handleAddUser = (newUser: User) => {
-      setAllUsers(prevUsers => [newUser, ...prevUsers]);
-  };
+    const updateUser = createUpdater(setAllUsers);
+    const addProject = createAdder(setAllProjects);
+    const updateProject = createUpdater(setAllProjects);
+    const addAsset = createAdder(setAllAssets);
+    const updateAsset = createUpdater(setAllAssets);
+    const deleteAsset = createDeleter(setAllAssets);
+    const addDocument = createAdder(setAllDocuments);
+    const updateDocument = createUpdater(setAllDocuments);
+    const deleteDocument = createDeleter(setAllDocuments);
+    const addUser = createAdder(setAllUsers);
+    const addUserTask = createAdder(setAllUserTasks);
+    const updateUserTask = createUpdater(setAllUserTasks);
+    const deleteUserTask = createDeleter(setAllUserTasks);
+    const addDailyReport = createAdder(setAllDailyReports);
+    const updateDailyReport = createUpdater(setAllDailyReports);
 
-  const handleUpdateProject = (updatedProject: Project) => {
-      setAllProjects(prevProjects => prevProjects.map(p => p.id === updatedProject.id ? updatedProject : p));
-  };
+    const addNotification = (type: NotificationType, message: string, link?: Notification['link']) => {
+        const newNotification: Notification = {
+            id: `n${Date.now()}`,
+            message,
+            timestamp: new Date().toISOString(),
+            read: false,
+            type,
+            link
+        };
+        setAllNotifications(prev => [newNotification, ...prev]);
+    };
 
-  const handleAddProject = (newProject: Project) => {
-      setAllProjects(prevProjects => [newProject, ...prevProjects]);
-  };
+    const markNotificationsAsRead = () => {
+        setAllNotifications(prev => prev.map(n => ({...n, read: true})));
+    };
+    
+    // Navigation handlers
+    const handleSelectProject = (projectId: string) => {
+        setSelectedProjectId(projectId);
+        setCurrentPage('projectDetail');
+    };
 
-  useEffect(() => {
-    const savedTheme = localStorage.getItem('theme') as 'light' | 'dark' | null;
-    if (savedTheme) {
-      setTheme(savedTheme);
-    }
-    const savedSettings = localStorage.getItem('appSettings');
-    if (savedSettings) {
-      setSettings(JSON.parse(savedSettings));
-    }
-  }, []);
+    const handleSelectUser = (userId: string) => {
+        setSelectedUserId(userId);
+        setCurrentPage('userDetail');
+    };
 
-  useEffect(() => {
-    if (theme === 'dark') {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-    localStorage.setItem('theme', theme);
-  }, [theme]);
-  
-  const handleSetSettings = (newSettings: Partial<AppSettings>) => {
-    setSettings(prevSettings => {
-        const updatedSettings = { ...prevSettings, ...newSettings };
-        localStorage.setItem('appSettings', JSON.stringify(updatedSettings));
-        return updatedSettings;
-    });
-  };
-
-  const toggleTheme = () => {
-    setTheme(prevTheme => (prevTheme === 'light' ? 'dark' : 'light'));
-  };
-
-  const userContextValue = useMemo(() => ({ user: currentUser, setUser: setCurrentUser }), [currentUser]);
-  const themeContextValue = useMemo(() => ({ theme, toggleTheme }), [theme]);
-  const settingsContextValue = useMemo(() => ({ settings, setSettings: handleSetSettings }), [settings]);
-  const dataContextValue = useMemo(() => ({ allUsers, allProjects, updateUser: handleUpdateUser, addUser: handleAddUser, updateProject: handleUpdateProject, addProject: handleAddProject }), [allUsers, allProjects]);
-
-  useEffect(() => {
-    const allowedRoles = pageRoles[currentPage];
-    if (allowedRoles && !allowedRoles.includes(currentUser.role)) {
-      setCurrentPage('dashboard');
-    }
-    if (currentPage !== 'projects') {
-      setSelectedProjectId(null);
-    }
-    if (currentPage !== 'users') {
+    const handleBackToProjects = () => {
+        setSelectedProjectId(null);
+        setCurrentPage('projects');
+    };
+    
+    const handleBackToUsers = () => {
         setSelectedUserId(null);
+        setCurrentPage('users');
+    };
+    
+    const handleLogin = (loggedInUser: User) => {
+        setUser(loggedInUser);
+        setCurrentPage('dashboard');
+    };
+    
+    const handleLogout = () => {
+        if (hasUnsavedChanges && !window.confirm("You have unsaved changes that will be lost. Are you sure you want to log out?")) {
+            return;
+        }
+        setUser(null);
+        setCurrentPage('dashboard'); // Or a dedicated login page identifier
+        setHasUnsavedChanges(false);
+    };
+
+    const renderPage = () => {
+        if (currentPage === 'projectDetail' && selectedProjectId) {
+            return <ProjectDetailPage projectId={selectedProjectId} onBack={handleBackToProjects} onSelectUser={handleSelectUser} setHasUnsavedChanges={setHasUnsavedChanges}/>;
+        }
+        if (currentPage === 'userDetail' && selectedUserId) {
+            return <UserDetailPage userId={selectedUserId} onBack={handleBackToUsers} />;
+        }
+        switch (currentPage) {
+            case 'dashboard': return <DashboardPage />;
+            case 'projects': return <ProjectManagementPage onSelectProject={handleSelectProject} />;
+            case 'assets': return <AssetManagementPage />;
+            case 'documents': return <DocumentManagementPage />;
+            case 'users': return <UserManagementPage onSelectUser={handleSelectUser} />;
+            case 'settings': return <SettingsPage />;
+            case 'gemini': return <GeminiPage />;
+            case 'departments': return <AdditionalDepartmentsPage />;
+            case 'operational': return <OperationalManagementPage />;
+            case 'notifications': return <NotificationPage onSelectProject={handleSelectProject} onSelectUser={handleSelectUser} />;
+            case 'calendar': return <CalendarPage onSelectProject={handleSelectProject} onSelectUser={handleSelectUser} />;
+            default: return <DashboardPage />;
+        }
+    };
+    
+    const dataContextValue: DataContextType = {
+        allUsers, allProjects, allAssets, allDocuments, allUserTasks, allNotifications, allDailyReports,
+        updateUser, addProject, updateProject, addAsset, updateAsset, deleteAsset,
+        addDocument, updateDocument, deleteDocument, addUser, addUserTask,
+        updateUserTask, deleteUserTask, addNotification, markNotificationsAsRead,
+        addDailyReport, updateDailyReport
+    };
+
+    if (!user) {
+        return <LoginPage onLoginSuccess={handleLogin} allUsers={allUsers} appError={appError} isDataLoaded={isDataLoaded} />;
     }
-  }, [currentUser, currentPage]);
 
-  const handleSelectProject = (projectId: string) => {
-    setSelectedProjectId(projectId);
-  };
-
-  const handleProjectBack = () => {
-    setSelectedProjectId(null);
-    setHasUnsavedChanges(false);
-  };
-
-  const renderPage = () => {
-    switch (currentPage) {
-      case 'dashboard':
-        return <DashboardPage />;
-      case 'assets':
-        return <AssetManagementPage />;
-      case 'projects':
-        return selectedProjectId ? (
-            <ProjectDetailPage 
-                projectId={selectedProjectId} 
-                onBack={handleProjectBack} 
-                onSelectUser={(userId) => {
-                  setSelectedUserId(userId);
-                  setCurrentPage('users');
-                }}
-                setHasUnsavedChanges={setHasUnsavedChanges}
-            />
-        ) : (
-            <ProjectManagementPage onSelectProject={handleSelectProject} />
-        );
-      case 'documents':
-        return <DocumentManagementPage />;
-      case 'users':
-        return selectedUserId ? (
-            <UserDetailPage 
-                userId={selectedUserId}
-                onBack={() => setSelectedUserId(null)}
-            />
-        ) : (
-            <UserManagementPage onSelectUser={setSelectedUserId} />
-        );
-      case 'departments':
-        return <AdditionalDepartmentsPage />;
-      case 'settings':
-        return <SettingsPage />;
-      default:
-        return <DashboardPage />;
-    }
-  };
-
-  return (
-    <ThemeContext.Provider value={themeContextValue}>
-      <UserContext.Provider value={userContextValue}>
-        <SettingsContext.Provider value={settingsContextValue}>
-          <DataContext.Provider value={dataContextValue}>
-            <div className="flex h-screen bg-background dark:bg-gray-900">
-              <Sidebar currentPage={currentPage} setCurrentPage={setCurrentPage} />
-              <div className="flex-1 flex flex-col overflow-hidden">
-                <Header setCurrentPage={setCurrentPage} hasUnsavedChanges={hasUnsavedChanges} />
-                <main className="flex-1 overflow-x-hidden overflow-y-auto bg-background dark:bg-gray-900 p-4 sm:p-6 lg:p-8">
-                  {renderPage()}
-                </main>
-              </div>
-            </div>
-          </DataContext.Provider>
-        </SettingsContext.Provider>
-      </UserContext.Provider>
-    </ThemeContext.Provider>
-  );
+    return (
+        <UserContext.Provider value={{ user, setUser }}>
+            <DataContext.Provider value={dataContextValue}>
+                <SettingsContext.Provider value={{ settings, setSettings }}>
+                    <div className="flex h-screen bg-background text-text-primary font-sans">
+                        <Sidebar currentPage={currentPage} setCurrentPage={setCurrentPage} />
+                        <div className="flex-1 flex flex-col overflow-hidden">
+                            <Header 
+                                setCurrentPage={setCurrentPage}
+                                hasUnsavedChanges={hasUnsavedChanges}
+                                onLogout={handleLogout}
+                                onSelectProject={handleSelectProject}
+                                onSelectUser={handleSelectUser}
+                            />
+                            <main className="flex-1 overflow-x-hidden overflow-y-auto bg-background p-6">
+                                {renderPage()}
+                            </main>
+                        </div>
+                    </div>
+                </SettingsContext.Provider>
+            </DataContext.Provider>
+        </UserContext.Provider>
+    );
 };
 
 export default App;

@@ -1,17 +1,19 @@
+
 import React, { useContext } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { Project, ProjectStatus } from '../../types';
 import { DataContext } from '../../App';
 import { ProjectStatusBadge } from '../../components/Badges';
+import AISummaryCard from './AISummaryCard';
 
 const DashboardCard: React.FC<{ title: string; value: string; icon: React.ReactNode; color: string }> = ({ title, value, icon, color }) => (
-  <div className="bg-surface dark:bg-gray-800 rounded-xl shadow-lg p-6 flex items-center space-x-4">
+  <div className="bg-surface rounded-xl shadow-lg p-6 flex items-center space-x-4">
     <div className={`p-3 rounded-full ${color}`}>
       {icon}
     </div>
     <div>
-      <p className="text-text-secondary dark:text-gray-400 text-sm font-medium">{title}</p>
-      <p className="text-2xl font-bold text-text-primary dark:text-gray-100">{value}</p>
+      <p className="text-text-secondary text-sm font-medium">{title}</p>
+      <p className="text-2xl font-bold text-text-primary">{value}</p>
     </div>
   </div>
 );
@@ -41,18 +43,20 @@ const DashboardPage: React.FC = () => {
 
     return (
         <div className="space-y-8">
+            <AISummaryCard />
+            
             {/* KPI Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                <DashboardCard title="Total Proyek Aktif" value={activeProjects.toString()} color="bg-blue-100 text-primary" icon={<FolderOpenIcon />} />
-                <DashboardCard title="Total Pendapatan" value={`Rp ${new Intl.NumberFormat('id-ID').format(totalRevenue)}`} color="bg-green-100 text-secondary" icon={<TrendingUpIcon />} />
-                <DashboardCard title="Total Pengeluaran" value={`Rp ${new Intl.NumberFormat('id-ID').format(totalExpense)}`} color="bg-red-100 text-red-500" icon={<TrendingDownIcon />} />
-                <DashboardCard title="Margin Profit" value={profitMargin} color="bg-yellow-100 text-accent" icon={<ScaleIcon />} />
+                <DashboardCard title="Total Proyek Aktif" value={activeProjects.toString()} color="bg-blue-900/50 text-blue-300" icon={<FolderOpenIcon />} />
+                <DashboardCard title="Total Pendapatan" value={`Rp ${new Intl.NumberFormat('id-ID').format(totalRevenue)}`} color="bg-green-900/50 text-green-300" icon={<TrendingUpIcon />} />
+                <DashboardCard title="Total Pengeluaran" value={`Rp ${new Intl.NumberFormat('id-ID').format(totalExpense)}`} color="bg-red-900/50 text-red-400" icon={<TrendingDownIcon />} />
+                <DashboardCard title="Margin Profit" value={profitMargin} color="bg-yellow-800/50 text-primary" icon={<ScaleIcon />} />
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Chart Analitik */}
-                <div className="lg:col-span-2 bg-surface dark:bg-gray-800 rounded-xl shadow-lg p-6">
-                    <h3 className="text-lg font-semibold mb-4 text-text-primary dark:text-gray-100">Analitik Pendapatan vs Pengeluaran</h3>
+                <div className="lg:col-span-2 bg-surface rounded-xl shadow-lg p-6">
+                    <h3 className="text-lg font-semibold mb-4 text-text-primary">Analitik Pendapatan vs Pengeluaran</h3>
                     <div className="h-80">
                         <ResponsiveContainer width="100%" height="100%">
                             <BarChart data={chartData} margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
@@ -73,8 +77,8 @@ const DashboardPage: React.FC = () => {
                 </div>
 
                 {/* Recent Activities */}
-                <div className="bg-surface dark:bg-gray-800 rounded-xl shadow-lg p-6">
-                    <h3 className="text-lg font-semibold mb-4 text-text-primary dark:text-gray-100">Aktivitas Proyek Terkini</h3>
+                <div className="bg-surface rounded-xl shadow-lg p-6">
+                    <h3 className="text-lg font-semibold mb-4 text-text-primary">Aktivitas Proyek Terkini</h3>
                     <ul className="space-y-4">
                         {allProjects.slice(0, 5).map((project: Project) => (
                             <li key={project.id} className="flex items-start space-x-3">
@@ -82,8 +86,8 @@ const DashboardPage: React.FC = () => {
                                     <img className="w-10 h-10 rounded-full" src={project.pic.avatarUrl} alt={project.pic.name} />
                                 </div>
                                 <div className="flex-1">
-                                    <p className="text-sm font-medium text-text-primary dark:text-gray-100">{project.name}</p>
-                                    <div className="flex items-center justify-between text-xs text-text-secondary dark:text-gray-400 mt-1">
+                                    <p className="text-sm font-medium text-text-primary">{project.name}</p>
+                                    <div className="flex items-center justify-between text-xs text-text-secondary mt-1">
                                         <span>{project.pic.name}</span>
                                         <ProjectStatusBadge status={project.status} />
                                     </div>

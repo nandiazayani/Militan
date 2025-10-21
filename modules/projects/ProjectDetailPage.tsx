@@ -1,6 +1,6 @@
 import React, { useContext, useState, useEffect, useMemo } from 'react';
 import { DataContext, UserContext } from '../../App';
-import { Project, Expense, ProjectTask, Vendor, ProjectHistoryLog, UserRole } from '../../types';
+import { Project, Expense, ProjectTask, Vendor, ProjectHistoryLog, UserRole, Lpj, LpjStatus, ProjectStatus } from '../../types';
 
 import ProjectHeader from '../../components/projects/ProjectHeader';
 import ProjectOverview from '../../components/projects/ProjectOverview';
@@ -9,10 +9,13 @@ import VendorCard from '../../components/projects/VendorCard';
 import TaskCard from '../../components/projects/TaskCard';
 import ExpenseCard from '../../components/projects/ExpenseCard';
 import HistoryCard from '../../components/projects/HistoryCard';
+import LpjCard from '../../components/projects/LpjCard';
+import GeminiProjectAssistant from '../../components/projects/GeminiProjectAssistant';
 
 import ExpenseModal from './modals/ExpenseModal';
 import VendorModal from './modals/VendorModal';
 import TaskModal from './modals/TaskModal';
+import LpjModal from './modals/LpjModal';
 
 interface ProjectDetailPageProps {
     projectId: string;
@@ -22,8 +25,8 @@ interface ProjectDetailPageProps {
 }
 
 type ActiveModal = {
-    type: 'expense' | 'vendor' | 'task' | null;
-    data?: Expense | Vendor | ProjectTask | null;
+    type: 'expense' | 'vendor' | 'task' | 'lpj' | null;
+    data?: Expense | Vendor | ProjectTask | Lpj | null;
 };
 
 const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({ projectId, onBack, onSelectUser, setHasUnsavedChanges }) => {
@@ -118,6 +121,22 @@ const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({ projectId, onBack
         }), log);
         setActiveModal({ type: null });
     };
+    
+    const handleSaveLpj = (savedLpj: Lpj) => {
+        const isEditing = !!project.lpj;
+        const logAction = savedLpj.status === LpjStatus.Submitted && project.lpj?.status !== LpjStatus.Submitted
+            ? 'Mengajukan Laporan Pertanggungjawaban untuk direview.'
+            : isEditing ? 'Memperbarui draf Laporan Pertanggungjawaban.' : 'Membuat draf Laporan Pertanggungjawaban.';
+        const log = createHistoryLog(logAction);
+        
+        const lpjToSave = { ...savedLpj };
+        if (savedLpj.status === LpjStatus.Submitted && !isEditing) {
+            lpjToSave.submittedDate = new Date().toISOString().split('T')[0];
+        }
+        
+        updateProjectState(() => ({ lpj: lpjToSave }), log);
+        setActiveModal({ type: null });
+    };
 
     const openModal = (type: ActiveModal['type'], data: ActiveModal['data'] = null) => {
         setActiveModal({ type, data });
@@ -128,6 +147,8 @@ const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({ projectId, onBack
             <ProjectHeader project={project} onBack={handleBack} onSave={handleSaveChanges} canEdit={canEditProject} />
 
             <ProjectOverview project={project} onSelectUser={onSelectUser} />
+
+            <GeminiProjectAssistant project={project} />
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div className="lg:col-span-1 flex flex-col gap-6">
@@ -141,10 +162,23 @@ const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({ projectId, onBack
             
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div className="lg:col-span-2">
-                    <ExpenseCard expenses={project.expenses} onOpenModal={openModal} onUpdateProject={updateProjectState} createHistoryLog={createHistoryLog} canEdit={canEditProject} />
+                    <ExpenseCard 
+                        expenses={project.expenses} 
+                        projectName={project.name}
+                        onOpenModal={openModal} 
+                        onUpdateProject={updateProjectState} 
+                        createHistoryLog={createHistoryLog} 
+                        canEdit={canEditProject} 
+                    />
                 </div>
-                <div className="lg:col-span-1">
+                <div className="lg:col-span-1 flex flex-col gap-6">
                     <HistoryCard history={project.history} />
+                    <LpjCard 
+                        project={project} 
+                        onOpenModal={() => openModal('lpj', project.lpj)} 
+                        onUpdateProject={updateProjectState} 
+                        createHistoryLog={createHistoryLog} 
+                    />
                 </div>
             </div>
 
@@ -172,6 +206,14 @@ const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({ projectId, onBack
                     task={activeModal.data as ProjectTask | null}
                     projectTeam={[project.pic, ...project.team]}
                     allTasks={project.tasks}
+                />
+            )}
+             {activeModal.type === 'lpj' && (
+                <LpjModal
+                    isOpen={true}
+                    onClose={() => setActiveModal({ type: null })}
+                    onSave={handleSaveLpj}
+                    project={project}
                 />
             )}
         </div>

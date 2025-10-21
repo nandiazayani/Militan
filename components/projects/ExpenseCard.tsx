@@ -4,13 +4,14 @@ import { ExpenseStatusBadge } from '../Badges';
 
 interface ExpenseCardProps {
     expenses: Expense[];
+    projectName: string;
     onOpenModal: (type: 'expense', data?: Expense | null) => void;
     onUpdateProject: (updater: (prev: Project) => Partial<Project>, log?: ProjectHistoryLog) => void;
     createHistoryLog: (action: string) => ProjectHistoryLog;
     canEdit: boolean;
 }
 
-const ExpenseCard: React.FC<ExpenseCardProps> = ({ expenses, onOpenModal, onUpdateProject, createHistoryLog, canEdit }) => {
+const ExpenseCard: React.FC<ExpenseCardProps> = ({ expenses, projectName, onOpenModal, onUpdateProject, createHistoryLog, canEdit }) => {
     const [filter, setFilter] = useState<ExpenseStatus | 'All'>('All');
 
     const handleDeleteExpense = (expenseId: string) => {
@@ -22,6 +23,40 @@ const ExpenseCard: React.FC<ExpenseCardProps> = ({ expenses, onOpenModal, onUpda
         }
     };
     
+    const handleExportCSV = () => {
+        const filtered = expenses.filter(e => filter === 'All' || e.status === filter);
+        if (filtered.length === 0) {
+            alert("Tidak ada data pengeluaran untuk diekspor.");
+            return;
+        }
+
+        const headers = ['Item', 'Jumlah', 'Tanggal', 'Status'];
+        const csvRows = [
+            headers.join(','),
+            ...filtered.map(expense => [
+                `"${expense.item.replace(/"/g, '""')}"`, // Escape double quotes
+                expense.amount,
+                expense.date,
+                expense.status
+            ].join(','))
+        ];
+
+        const csvString = csvRows.join('\n');
+        const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+
+        const url = URL.createObjectURL(blob);
+        const dateStr = new Date().toISOString().split('T')[0];
+        const filename = `pengeluaran_${projectName.replace(/ /g, '_')}_${dateStr}.csv`;
+
+        link.setAttribute('href', url);
+        link.setAttribute('download', filename);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+
     const filteredExpenses = expenses.filter(e => filter === 'All' || e.status === filter);
 
     return (
@@ -38,11 +73,17 @@ const ExpenseCard: React.FC<ExpenseCardProps> = ({ expenses, onOpenModal, onUpda
                         {Object.values(ExpenseStatus).map(s => <option key={s} value={s}>{s}</option>)}
                     </select>
                 </div>
-                {canEdit && (
-                    <button onClick={() => onOpenModal('expense')} className="px-3 py-1 bg-secondary text-white text-sm rounded-lg hover:bg-green-700">
-                        Tambah Pengeluaran
+                <div className="flex items-center gap-2">
+                     <button onClick={handleExportCSV} className="flex items-center gap-1.5 px-3 py-1 bg-gray-600 text-white text-sm rounded-lg hover:bg-gray-500 transition">
+                        <DocumentArrowDownIcon />
+                        <span>Ekspor CSV</span>
                     </button>
-                )}
+                    {canEdit && (
+                        <button onClick={() => onOpenModal('expense')} className="px-3 py-1 bg-secondary text-white text-sm rounded-lg hover:bg-green-700">
+                            Tambah Pengeluaran
+                        </button>
+                    )}
+                </div>
             </div>
             <div className="overflow-x-auto">
                 <table className="min-w-full">
@@ -86,5 +127,7 @@ const ExpenseCard: React.FC<ExpenseCardProps> = ({ expenses, onOpenModal, onUpda
         </div>
     );
 };
+
+const DocumentArrowDownIcon = () => <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4"><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m.75 12l3 3m0 0l3-3m-3 3v-6m-1.5-9H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg>;
 
 export default ExpenseCard;

@@ -1,6 +1,8 @@
 import React from 'react';
 import { ProjectTask, Project, ProjectHistoryLog } from '../../types';
 import { PriorityBadge } from '../Badges';
+import { useContext } from 'react';
+import { DataContext } from '../../App';
 
 interface TaskCardProps {
     tasks: ProjectTask[];
@@ -11,6 +13,7 @@ interface TaskCardProps {
 }
 
 const TaskCard: React.FC<TaskCardProps> = ({ tasks, onOpenModal, onUpdateProject, createHistoryLog, canEdit }) => {
+    const dataContext = useContext(DataContext);
 
     const handleDeleteTask = (taskId: string) => {
         const dependentTasks = tasks.filter(t => t.dependencies?.includes(taskId));
@@ -36,6 +39,18 @@ const TaskCard: React.FC<TaskCardProps> = ({ tasks, onOpenModal, onUpdateProject
             prev => ({ tasks: prev.tasks.map(t => t.id === taskId ? { ...t, completed: true } : t) }),
             log
         );
+        
+        // SIMULASI: Tambahkan notifikasi saat tugas selesai
+        if (dataContext) {
+            const project = dataContext.allProjects.find(p => p.tasks.some(t => t.id === taskId));
+            if (project) {
+                dataContext.addNotification(
+                    'task_completed',
+                    `${task.assignee.name} telah menyelesaikan tugas "${task.title}".`,
+                    { page: 'projects', id: project.id }
+                );
+            }
+        }
     };
 
     return (
