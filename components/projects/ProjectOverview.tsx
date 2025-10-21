@@ -1,0 +1,40 @@
+import React from 'react';
+import { Project } from '../../types';
+import InfoCard from '../InfoCard';
+
+interface ProjectOverviewProps {
+    project: Project;
+    onSelectUser: (userId: string) => void;
+}
+
+const ProjectOverview: React.FC<ProjectOverviewProps> = ({ project, onSelectUser }) => {
+    return (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <InfoCard title="Person In Charge (PIC)">
+                <div 
+                    className="flex items-center cursor-pointer p-2 -m-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700" 
+                    onClick={() => onSelectUser(project.pic.id)}
+                >
+                    <img src={project.pic.avatarUrl} alt={project.pic.name} className="w-10 h-10 rounded-full mr-3" />
+                    <div>
+                        <p className="font-semibold">{project.pic.name}</p>
+                        <p className="text-sm text-gray-500">{project.pic.role}</p>
+                    </div>
+                </div>
+            </InfoCard>
+            <InfoCard title="Timeline">
+                <p><strong>Mulai:</strong> {project.startDate}</p>
+                <p><strong>Selesai:</strong> {project.endDate}</p>
+            </InfoCard>
+            <InfoCard title="Anggaran">
+                <p><strong>Modal:</strong> Rp {project.budget.modal.toLocaleString('id-ID')}</p>
+                <p><strong>Pemasukan:</strong> Rp {project.budget.pemasukan.toLocaleString('id-ID')}</p>
+                <p className={`font-bold ${project.budget.pemasukan >= project.budget.modal ? 'text-green-500' : 'text-red-500'}`}>
+                    <strong>Profit:</strong> Rp {(project.budget.pemasukan - project.budget.modal).toLocaleString('id-ID')}
+                </p>
+            </InfoCard>
+        </div>
+    );
+};
+
+export default ProjectOverview;

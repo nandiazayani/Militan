@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { MOCK_PROJECTS } from '../../constants/mockData';
 import { Project, ProjectStatus } from '../../types';
+import { DataContext } from '../../App';
+import { ProjectStatusBadge } from '../../components/Badges';
 
 const DashboardCard: React.FC<{ title: string; value: string; icon: React.ReactNode; color: string }> = ({ title, value, icon, color }) => (
   <div className="bg-surface dark:bg-gray-800 rounded-xl shadow-lg p-6 flex items-center space-x-4">
@@ -15,35 +16,28 @@ const DashboardCard: React.FC<{ title: string; value: string; icon: React.ReactN
   </div>
 );
 
-const ProjectStatusBadge: React.FC<{ status: ProjectStatus }> = ({ status }) => {
-  const statusStyles = {
-    [ProjectStatus.OnProgress]: 'bg-blue-100 text-blue-800',
-    [ProjectStatus.Completed]: 'bg-green-100 text-green-800',
-    [ProjectStatus.Pitching]: 'bg-yellow-100 text-yellow-800',
-    [ProjectStatus.Approved]: 'bg-indigo-100 text-indigo-800',
-    [ProjectStatus.Revision]: 'bg-orange-100 text-orange-800',
-    [ProjectStatus.Archived]: 'bg-gray-100 text-gray-800',
-  };
-  return (
-    <span className={`px-2 py-1 text-xs font-semibold rounded-full ${statusStyles[status] || 'bg-gray-100 text-gray-800'}`}>
-      {status}
-    </span>
-  );
-};
-
-
 const DashboardPage: React.FC = () => {
-    const totalProjects = MOCK_PROJECTS.length;
-    const activeProjects = MOCK_PROJECTS.filter(p => p.status === 'On Progress').length;
-    const totalRevenue = MOCK_PROJECTS.reduce((sum, p) => sum + p.budget.pemasukan, 0);
-    const totalExpense = MOCK_PROJECTS.reduce((sum, p) => sum + p.budget.pengeluaran, 0);
+    const dataContext = useContext(DataContext);
+    if (!dataContext) return null;
+    const { allProjects } = dataContext;
+
+    const totalProjects = allProjects.length;
+    const activeProjects = allProjects.filter(p => p.status === 'On Progress').length;
+    const totalRevenue = allProjects.reduce((sum, p) => sum + p.budget.pemasukan, 0);
+    const totalExpense = allProjects.reduce((sum, p) => {
+        const projectExpenses = p.expenses.reduce((expenseSum, item) => expenseSum + item.amount, 0);
+        return sum + projectExpenses;
+    }, 0);
     const profitMargin = totalRevenue > 0 ? ((totalRevenue - totalExpense) / totalRevenue * 100).toFixed(1) + '%' : '0%';
 
-    const chartData = MOCK_PROJECTS.slice(0, 5).map(p => ({
-        name: p.name.substring(0, 15) + '...',
-        Pemasukan: p.budget.pemasukan,
-        Pengeluaran: p.budget.pengeluaran,
-    }));
+    const chartData = allProjects.slice(0, 5).map(p => {
+        const pengeluaran = p.expenses.reduce((sum, item) => sum + item.amount, 0);
+        return {
+            name: p.name.substring(0, 15) + '...',
+            Pemasukan: p.budget.pemasukan,
+            Pengeluaran: pengeluaran,
+        }
+    });
 
     return (
         <div className="space-y-8">
@@ -82,7 +76,7 @@ const DashboardPage: React.FC = () => {
                 <div className="bg-surface dark:bg-gray-800 rounded-xl shadow-lg p-6">
                     <h3 className="text-lg font-semibold mb-4 text-text-primary dark:text-gray-100">Aktivitas Proyek Terkini</h3>
                     <ul className="space-y-4">
-                        {MOCK_PROJECTS.slice(0, 5).map((project: Project) => (
+                        {allProjects.slice(0, 5).map((project: Project) => (
                             <li key={project.id} className="flex items-start space-x-3">
                                 <div className="flex-shrink-0">
                                     <img className="w-10 h-10 rounded-full" src={project.pic.avatarUrl} alt={project.pic.name} />

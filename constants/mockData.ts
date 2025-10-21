@@ -1,104 +1,146 @@
-import { User, UserRole, Asset, AssetType, AssetStatus, Project, ProjectStatus, Document, UserTask } from '../types';
+import { User, UserRole, Project, ProjectStatus, Asset, AssetStatus, AssetType, Document, UserTask, TaskPriority, ExpenseStatus, ProjectHistoryLog, Vendor } from '../types';
 
 export const MOCK_USERS: User[] = [
-  { id: 'u1', name: 'Admin Utama', role: UserRole.Admin, avatarUrl: 'https://picsum.photos/seed/admin/100/100' },
-  { id: 'u2', name: 'Budi Manajer', role: UserRole.Manager, avatarUrl: 'https://picsum.photos/seed/manager1/100/100', department: 'TerusBerjalan.id' },
-  { id: 'u3', name: 'Citra Staff', role: UserRole.Staff, avatarUrl: 'https://picsum.photos/seed/staff1/100/100', department: 'Cecikal' },
-  { id: 'u4', name: 'Dedi Asset', role: UserRole.AssetManager, avatarUrl: 'https://picsum.photos/seed/asset/100/100' },
-  { id: 'u5', name: 'Eka Staff', role: UserRole.Staff, avatarUrl: 'https://picsum.photos/seed/staff2/100/100', department: 'Ganeshatu' },
-];
-
-export const MOCK_ASSETS: Asset[] = [
-  { id: 'a1', name: 'Kamera Sony A7III', type: AssetType.Permanent, status: AssetStatus.Available, lastMaintenance: '2023-10-15' },
-  { id: 'a2', name: 'Lighting Set Godox', type: AssetType.Liquid, status: AssetStatus.InUse, lastMaintenance: '2023-11-01' },
-  { id: 'a3', name: 'Sound System Pro', type: AssetType.Rent, status: AssetStatus.RentedOut, lastMaintenance: '2023-09-20', rentedUntil: '2024-08-15' },
-  { id: 'a4', name: 'Kabel XLR 10m', type: AssetType.Liquid, status: AssetStatus.Broken, lastMaintenance: '2023-05-10' },
-  { id: 'a5', name: 'Laptop HP Victus', type: AssetType.Permanent, status: AssetStatus.InUse, lastMaintenance: '2024-01-05' },
-  { id: 'a6', name: 'Proyektor Epson', type: AssetType.Permanent, status: AssetStatus.Maintenance, lastMaintenance: '2024-03-01', nextMaintenance: '2024-09-01'},
+  { id: 'u1', name: 'Ahmadinejad', role: UserRole.Admin, avatarUrl: 'https://i.pravatar.cc/150?u=u1', department: 'Executive' },
+  { id: 'u2', name: 'Budi Santoso', role: UserRole.Manager, avatarUrl: 'https://i.pravatar.cc/150?u=u2', department: 'Project Management' },
+  { id: 'u3', name: 'Citra Lestari', role: UserRole.Staff, avatarUrl: 'https://i.pravatar.cc/150?u=u3', department: 'Creative' },
+  { id: 'u4', name: 'Dewi Anggraini', role: UserRole.AssetManager, avatarUrl: 'https://i.pravatar.cc/150?u=u4', department: 'Operations' },
+  { id: 'u5', name: 'Eko Prasetyo', role: UserRole.Finance, avatarUrl: 'https://i.pravatar.cc/150?u=u5', department: 'Finance' },
+  { id: 'u6', name: 'Fitriani', role: UserRole.Staff, avatarUrl: 'https://i.pravatar.cc/150?u=u6', department: 'Project Management' },
 ];
 
 export const MOCK_PROJECTS: Project[] = [
   {
     id: 'p1',
-    name: 'Konser Musik Merdeka',
-    status: ProjectStatus.OnProgress,
+    name: 'Konser Musik Kemerdekaan',
     pic: MOCK_USERS[1],
-    team: [
-      { user: MOCK_USERS[2], position: 'Koordinator Lapangan', progress: 75 },
-      { user: MOCK_USERS[4], position: 'Logistik', progress: 90 },
+    startDate: '2023-08-01',
+    endDate: '2023-08-20',
+    status: ProjectStatus.Completed,
+    budget: { modal: 200000000, pemasukan: 350000000 },
+    team: [MOCK_USERS[2], MOCK_USERS[5]],
+    vendors: [
+      { id: 'v1', name: 'Sound System Pro', service: 'Audio Engineering', contact: 'John Doe - 08123456789' },
+      { id: 'v2', name: 'Lighting Megah', service: 'Stage Lighting', contact: 'Jane Smith - 08987654321' }
     ],
-    budget: { modal: 150000000, pengeluaran: 85000000, pemasukan: 180000000 },
-    vendors: [{id: 'v1', name: 'Catering Enak', status: 'Paid'}, {id: 'v2', name: 'Sound System Gahar', status: 'Pending'}],
+    expenses: [
+      { id: 'e1', item: 'Sewa Venue', amount: 50000000, date: '2023-08-02', status: ExpenseStatus.Approved, receiptFilenames: ['nota-venue-dp.pdf', 'surat-perjanjian-sewa.pdf'] },
+      { 
+        id: 'e2', 
+        item: 'Talent Fee - Raisa', 
+        amount: 150000000, 
+        date: '2023-08-10', 
+        status: ExpenseStatus.Pending, 
+        originalData: { item: 'Talent Fee', amount: 120000000 },
+        receiptFilenames: ['invoice-raisa.pdf'], 
+      },
+    ],
     tasks: [
-        { id: 'pt1', title: 'Finalisasi Desain Panggung', assignee: MOCK_USERS[2], status: 'Done', dueDate: '2024-07-28' },
-        { id: 'pt2', title: 'Booking Keamanan Acara', assignee: MOCK_USERS[2], status: 'In Progress', dueDate: '2024-08-01' },
-        { id: 'pt3', title: 'Cek Ketersediaan Genset', assignee: MOCK_USERS[4], status: 'To Do', dueDate: '2024-08-05' },
+      { id: 'pt1', title: 'Booking Venue', assignee: MOCK_USERS[2], completed: true, dueDate: '2023-08-05', priority: TaskPriority.High },
+      { id: 'pt2', title: 'Finalisasi Lineup Artis', assignee: MOCK_USERS[5], completed: true, dueDate: '2023-08-12', priority: TaskPriority.Medium, dependencies: ['pt1'] },
     ],
-    reportUrl: '#',
-    startDate: '2024-08-01',
-    endDate: '2024-08-17',
+    history: [
+        { id: 'h1', timestamp: '2023-08-10T10:00:00Z', user: MOCK_USERS[2], action: 'Mengubah pengeluaran "Talent Fee" menjadi "Talent Fee - Raisa" dan jumlahnya.' },
+        { id: 'h2', timestamp: '2023-08-05T14:30:00Z', user: MOCK_USERS[1], action: 'Menambahkan Citra Lestari ke tim proyek.' },
+        { id: 'h3', timestamp: '2023-08-02T09:00:00Z', user: MOCK_USERS[1], action: 'Menambahkan pengeluaran baru: "Sewa Venue".' },
+    ]
   },
   {
     id: 'p2',
-    name: 'Pameran Seni Rupa Digital',
-    status: ProjectStatus.Completed,
+    name: 'Pameran Teknologi & Inovasi',
     pic: MOCK_USERS[1],
-    team: [
-      { user: MOCK_USERS[4], position: 'Desain Grafis', progress: 100 },
+    startDate: '2023-09-10',
+    endDate: '2023-09-15',
+    status: ProjectStatus.OnProgress,
+    budget: { modal: 150000000, pemasukan: 180000000 },
+    team: [MOCK_USERS[2], MOCK_USERS[5], MOCK_USERS[3]],
+    vendors: [
+      { id: 'v3', name: 'Booth Constructor', service: 'Exhibition Booths', contact: 'Budi - 08111222333' },
+      { id: 'v4', name: 'Digital Printing', service: 'Banners & Prints', contact: 'Citra - 08556677889' }
     ],
-    budget: { modal: 50000000, pengeluaran: 45000000, pemasukan: 70000000 },
-    vendors: [{id: 'v3', name: 'Percetakan Cepat', status: 'Paid'}],
+    expenses: [
+        { id: 'e3', item: 'Sewa JCC', amount: 75000000, date: '2023-09-01', status: ExpenseStatus.Approved, receiptFilenames: ['invoice-jcc.pdf'] },
+    ],
     tasks: [
-        { id: 'pt4', title: 'Kirim Undangan Digital', assignee: MOCK_USERS[4], status: 'Done', dueDate: '2024-05-01' },
+      { id: 'pt3', title: 'Hubungi Sponsor', assignee: MOCK_USERS[2], completed: true, dueDate: '2023-09-01', priority: TaskPriority.High },
+      { id: 'pt4', title: 'Desain Layout Pameran', assignee: MOCK_USERS[5], completed: false, dueDate: '2023-09-12', priority: TaskPriority.Medium, dependencies: ['pt3'] },
     ],
-    reportUrl: '#',
-    startDate: '2024-05-10',
-    endDate: '2024-05-20',
   },
   {
     id: 'p3',
-    name: 'Proposal Wedding Organizer',
-    status: ProjectStatus.Pitching,
+    name: 'Gathering Perusahaan XYZ',
     pic: MOCK_USERS[2],
-    team: [],
-    budget: { modal: 0, pengeluaran: 500000, pemasukan: 0 },
-    vendors: [],
+    startDate: '2023-10-05',
+    endDate: '2023-10-07',
+    status: ProjectStatus.Approved,
+    budget: { modal: 80000000, pemasukan: 100000000 },
+    team: [MOCK_USERS[5]],
+    vendors: [
+      { id: 'v5', name: 'Catering Enak', service: 'Food & Beverages', contact: 'Siti - 0876543210' },
+      { id: 'v6', name: 'EO Partner', service: 'Event Organizing', contact: 'Rudi - 08998877665' }
+    ],
+    expenses: [],
     tasks: [],
-    startDate: '2024-09-01',
-    endDate: '2024-09-30',
   },
-   {
+    {
     id: 'p4',
     name: 'Festival Kuliner Nusantara',
-    status: ProjectStatus.Approved,
     pic: MOCK_USERS[1],
-    team: [
-      { user: MOCK_USERS[2], position: 'Koordinator Acara', progress: 20 },
-    ],
-    budget: { modal: 200000000, pengeluaran: 15000000, pemasukan: 0 },
-    vendors: [{id: 'v4', name: 'Sewa Tenda Akbar', status: 'Pending'}],
-    tasks: [
-        { id: 'pt5', title: 'Hubungi Tenant Makanan', assignee: MOCK_USERS[2], status: 'To Do', dueDate: '2024-09-10' },
-    ],
-    reportUrl: '#',
-    startDate: '2024-10-01',
-    endDate: '2024-10-05',
+    startDate: '2023-11-01',
+    endDate: '2023-11-05',
+    status: ProjectStatus.Pitching,
+    budget: { modal: 50000000, pemasukan: 0 },
+    team: [MOCK_USERS[2]],
+    vendors: [],
+    // FIX: Added missing expenses property to satisfy the Project interface.
+    expenses: [],
+    tasks: [],
   },
+  {
+    id: 'p5',
+    name: 'Peluncuran Produk ABC',
+    pic: MOCK_USERS[5],
+    startDate: '2024-01-15',
+    endDate: '2024-01-15',
+    status: ProjectStatus.OnProgress,
+    budget: { modal: 120000000, pemasukan: 120000000 },
+    team: [MOCK_USERS[2], MOCK_USERS[3]],
+    vendors: [
+      { id: 'v7', name: 'Venue Hotel Bintang 5', service: 'Venue Provider', contact: 'Manager - 021500500' },
+      { id: 'v8', name: 'PR Agency', service: 'Public Relations', contact: 'Dewi - 08123123123' }
+    ],
+    expenses: [
+      { id: 'e4', item: 'Down Payment Venue', amount: 30000000, date: '2023-12-01', status: ExpenseStatus.Approved, receiptFilenames: ['dp-venue-hotel.pdf'] },
+    ],
+    tasks: [
+      { id: 'pt5', title: 'Kirim Undangan Media', assignee: MOCK_USERS[2], completed: false, dueDate: '2024-01-10', priority: TaskPriority.High },
+    ],
+  },
+];
+
+export const MOCK_ASSETS: Asset[] = [
+  { id: 'a1', name: 'Proyektor Epson EB-X500', type: AssetType.Permanent, status: AssetStatus.Available, lastMaintenance: '2023-06-01', nextMaintenance: '2023-12-01' },
+  { id: 'a2', name: 'Mixer Audio Yamaha MG16XU', type: AssetType.Permanent, status: AssetStatus.InUse, lastMaintenance: '2023-05-15' },
+  { id: 'a3', name: 'Lighting PAR LED (Set 8)', type: AssetType.Rent, status: AssetStatus.RentedOut, lastMaintenance: '2023-07-01', rentedUntil: '2023-09-30' },
+  { id: 'a4', name: 'Laptop Dell XPS 15', type: AssetType.Permanent, status: AssetStatus.Maintenance, lastMaintenance: '2023-08-25' },
+  { id: 'a5', name: 'Kamera Sony A7 III', type: AssetType.Permanent, status: AssetStatus.Broken, lastMaintenance: '2023-04-10' },
+  { id: 'a6', name: 'Wireless Microphone Shure (4 Ch)', type: AssetType.Liquid, status: AssetStatus.Available, lastMaintenance: '2023-08-01' },
 ];
 
 export const MOCK_DOCUMENTS: Document[] = [
-    { id: 'd1', name: 'Data Venue Jogja Expo Center', description: 'Termasuk denah layout dan kapasitas ruangan.', category: 'Venue', version: 2, lastUpdated: '2024-02-10', fileType: 'PDF', tags: ['jogja', 'exhibition'] },
-    { id: 'd2', name: 'Konsep Acara Musik Indie', description: 'Draft awal untuk presentasi ke klien.', category: 'Konsep', version: 1, lastUpdated: '2023-11-20', fileType: 'DOCX', tags: ['music', 'indie'] },
-    { id: 'd3', name: 'List MC & Talent 2024', category: 'Talent', version: 5, lastUpdated: '2024-03-15', fileType: 'PDF', tags: ['mc', 'host', '2024'] },
-    { id: 'd4', name: 'SPK Konser Musik Merdeka', category: 'MOU & SPK', version: 1, lastUpdated: '2024-04-01', fileType: 'PDF', tags: ['p1', 'legal'] },
-    { id: 'd5', name: 'Invoice Catering Enak', category: 'Invoice & Kuitansi', version: 1, lastUpdated: '2024-04-05', fileType: 'PDF', tags: ['p1', 'finance'] },
+  // FIX: Added missing description property to all documents
+  { id: 'd1', name: 'Quotation Venue Hotel Mulia', description: 'Penawaran harga untuk sewa ballroom Hotel Mulia.', category: 'Venue', fileType: 'PDF', version: 2, lastUpdated: '2023-08-15', tags: ['jakarta', 'venue', '2023'] },
+  { id: 'd2', name: 'Konsep Acara Konser Kemerdekaan', description: 'Detail konsep acara, rundown, dan tema visual untuk Konser Kemerdekaan.', category: 'Konsep', fileType: 'DOCX', version: 3, lastUpdated: '2023-07-20', tags: ['konsep', 'konser'] },
+  { id: 'd3', name: 'Rider Artis Tulus', description: 'Technical and hospitality riders untuk penampilan Tulus.', category: 'Talent', fileType: 'PDF', version: 1, lastUpdated: '2023-08-01', tags: ['talent', 'rider'] },
+  { id: 'd4', name: 'Kontrak Vendor Sound System', description: 'Perjanjian kerja sama dengan vendor Sound System Pro.', category: 'Vendor', fileType: 'PDF', version: 1, lastUpdated: '2023-08-05', tags: ['kontrak', 'vendor', 'audio'] },
+  { id: 'd5', name: 'MOU Klien Perusahaan XYZ', description: 'Memorandum of Understanding untuk project gathering Perusahaan XYZ.', category: 'MOU & SPK', fileType: 'DOCX', version: 1, lastUpdated: '2023-09-01', tags: ['mou', 'legal'] },
+  { id: 'd6', name: 'Invoice DP Venue Pameran', description: 'Bukti pembayaran down payment untuk sewa JCC.', category: 'Invoice & Kuitansi', fileType: 'JPG', version: 1, lastUpdated: '2023-09-02', tags: ['invoice', 'finance'] },
 ];
 
 export const MOCK_USER_TASKS: UserTask[] = [
-    { id: 't1', userId: 'u2', title: 'Follow up vendor Sound System', status: 'In Progress', dueDate: '2024-07-30' },
-    { id: 't2', userId: 'u2', title: 'Buat laporan mingguan proyek', status: 'To Do', dueDate: '2024-07-28' },
-    { id: 't3', userId: 'u3', title: 'Desain layout panggung', status: 'Done', dueDate: '2024-07-25' },
-    { id: 't4', userId: 'u3', title: 'Submit proposal wedding', status: 'To Do', dueDate: '2024-08-05' },
-    { id: 't5', userId: 'u1', title: 'Review Kinerja Bulanan', status: 'In Progress', dueDate: '2024-08-01' },
-    { id: 't6', userId: 'u5', title: 'Hubungi vendor lighting', status: 'Done', dueDate: '2024-07-26' },
+  { id: 't1', userId: 'u3', title: 'Desain materi promosi Konser', status: 'Done', dueDate: '2023-08-10', priority: TaskPriority.High },
+  { id: 't2', userId: 'u3', title: 'Revisi layout booth pameran', status: 'In Progress', dueDate: '2023-09-12', priority: TaskPriority.Medium },
+  { id: 't3', userId: 'u6', title: 'Follow up sponsor pameran', status: 'In Progress', dueDate: '2023-09-10', priority: TaskPriority.High },
+  { id: 't4', userId: 'u6', title: 'Buat laporan mingguan proyek', status: 'To Do', dueDate: '2023-09-08', priority: TaskPriority.Low },
+  { id: 't5', userId: 'u2', title: 'Review Anggaran Kuartal 4', status: 'To Do', dueDate: '2023-09-15', priority: TaskPriority.High },
 ];

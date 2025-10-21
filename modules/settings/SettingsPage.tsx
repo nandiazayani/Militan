@@ -1,5 +1,6 @@
-import React, { useContext } from 'react';
-import { ThemeContext, UserContext } from '../../App';
+import React, { useContext, useState } from 'react';
+import { ThemeContext, UserContext, SettingsContext, DataContext } from '../../App';
+import EditProfileModal from '../../components/EditProfileModal';
 
 const SettingsToggle: React.FC<{ label: string; enabled: boolean; onToggle: () => void; }> = ({ label, enabled, onToggle }) => (
     <div className="flex items-center justify-between py-3">
@@ -31,13 +32,23 @@ const SettingsCard: React.FC<{ title: string; children: React.ReactNode }> = ({ 
 const SettingsPage: React.FC = () => {
     const userContext = useContext(UserContext);
     const themeContext = useContext(ThemeContext);
+    const settingsContext = useContext(SettingsContext);
+    const dataContext = useContext(DataContext);
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
-    if (!userContext || !themeContext) {
+
+    if (!userContext || !themeContext || !settingsContext || !dataContext) {
         return null;
     }
 
     const { user } = userContext;
     const { theme, toggleTheme } = themeContext;
+    const { settings, setSettings } = settingsContext;
+    const { updateUser } = dataContext;
+
+    const toggleAutoSave = () => {
+        setSettings({ autoSaveEnabled: !settings.autoSaveEnabled });
+    };
 
     return (
         <div className="space-y-6 max-w-4xl mx-auto">
@@ -52,7 +63,7 @@ const SettingsPage: React.FC = () => {
                     </div>
                 </div>
                 <div className="py-3 text-right">
-                    <button onClick={() => alert('Fitur edit profil belum tersedia.')} className="px-4 py-2 text-sm font-medium bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600">
+                    <button onClick={() => setIsEditModalOpen(true)} className="px-4 py-2 text-sm font-medium bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600">
                         Edit Profil
                     </button>
                 </div>
@@ -63,6 +74,14 @@ const SettingsPage: React.FC = () => {
                     label="Mode Gelap"
                     enabled={theme === 'dark'}
                     onToggle={toggleTheme}
+                />
+            </SettingsCard>
+
+            <SettingsCard title="Fungsionalitas">
+                <SettingsToggle
+                    label="Aktifkan Auto-Save Progress Tim"
+                    enabled={settings.autoSaveEnabled}
+                    onToggle={toggleAutoSave}
                 />
             </SettingsCard>
 
@@ -80,6 +99,13 @@ const SettingsPage: React.FC = () => {
                     </button>
                 </div>
             </SettingsCard>
+
+            <EditProfileModal
+                isOpen={isEditModalOpen}
+                onClose={() => setIsEditModalOpen(false)}
+                onSave={updateUser}
+                user={user}
+            />
         </div>
     );
 };

@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { MOCK_DOCUMENTS } from '../../constants/mockData';
-import { Document } from '../../types';
+// Fix: Import specific types for stronger type checking.
+import { Document, DocumentCategory, DocumentFileType } from '../../types';
 
 const AddDocumentModal: React.FC<{ 
     isOpen: boolean; 
@@ -10,8 +11,10 @@ const AddDocumentModal: React.FC<{
 }> = ({ isOpen, onClose, onSave, selectedFile }) => {
     const [name, setName] = useState('');
     const [description, setDescription] = useState('');
-    const [category, setCategory] = useState<'Venue' | 'Konsep' | 'Talent' | 'Vendor' | 'MOU & SPK' | 'Invoice & Kuitansi' | 'Legalitas'>('Venue');
-    const [fileType, setFileType] = useState<'PDF' | 'DOCX' | 'JPG'>('PDF');
+    // Fix: Use the imported DocumentCategory type for state.
+    const [category, setCategory] = useState<DocumentCategory>('Venue');
+    // Fix: Use the imported DocumentFileType type for state.
+    const [fileType, setFileType] = useState<DocumentFileType>('PDF');
     const [tags, setTags] = useState('');
 
     useEffect(() => {
@@ -61,7 +64,7 @@ const AddDocumentModal: React.FC<{
 
     if (!isOpen) return null;
 
-    const categories = ['Venue', 'Konsep', 'Talent', 'Vendor', 'MOU & SPK', 'Invoice & Kuitansi', 'Legalitas'];
+    const categories: DocumentCategory[] = ['Venue', 'Konsep', 'Talent', 'Vendor', 'MOU & SPK', 'Invoice & Kuitansi', 'Legalitas'];
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
@@ -90,13 +93,15 @@ const AddDocumentModal: React.FC<{
                     </div>
                     <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Kategori</label>
-                        <select value={category} onChange={(e) => setCategory(e.target.value as any)} className="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary text-gray-900 dark:text-gray-100">
+                        {/* Fix: Replace `as any` with specific type assertion. */}
+                        <select value={category} onChange={(e) => setCategory(e.target.value as DocumentCategory)} className="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary text-gray-900 dark:text-gray-100">
                             {categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
                         </select>
                     </div>
                      <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Tipe File</label>
-                        <select value={fileType} onChange={(e) => setFileType(e.target.value as any)} className="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary text-gray-900 dark:text-gray-100">
+                        {/* Fix: Replace `as any` with specific type assertion. */}
+                        <select value={fileType} onChange={(e) => setFileType(e.target.value as DocumentFileType)} className="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary text-gray-900 dark:text-gray-100">
                             <option value="PDF">PDF</option>
                             <option value="DOCX">DOCX</option>
                             <option value="JPG">JPG</option>

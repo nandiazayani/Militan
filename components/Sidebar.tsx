@@ -41,10 +41,10 @@ const Sidebar: React.FC<SidebarProps> = ({ currentPage, setCurrentPage }) => {
   const { user } = userContext;
   
   const navItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: <HomeIcon />, roles: [UserRole.Admin, UserRole.Manager, UserRole.Staff, UserRole.AssetManager] },
+    { id: 'dashboard', label: 'Dashboard', icon: <HomeIcon />, roles: [UserRole.Admin, UserRole.Manager, UserRole.Staff, UserRole.AssetManager, UserRole.Finance] },
     { id: 'assets', label: 'Asset Management', icon: <CubeIcon />, roles: [UserRole.Admin, UserRole.AssetManager] },
-    { id: 'projects', label: 'Project Management', icon: <FolderIcon />, roles: [UserRole.Admin, UserRole.Manager, UserRole.Staff] },
-    { id: 'documents', label: 'Document Management', icon: <DocumentDuplicateIcon />, roles: [UserRole.Admin, UserRole.Manager, UserRole.Staff] },
+    { id: 'projects', label: 'Project Management', icon: <FolderIcon />, roles: [UserRole.Admin, UserRole.Manager, UserRole.Staff, UserRole.Finance] },
+    { id: 'documents', label: 'Document Management', icon: <DocumentDuplicateIcon />, roles: [UserRole.Admin, UserRole.Manager, UserRole.Staff, UserRole.Finance] },
     { id: 'users', label: 'User Management', icon: <UserGroupIcon />, roles: [UserRole.Admin, UserRole.Manager, UserRole.Staff] },
     { id: 'departments', label: 'Departments', icon: <BuildingOfficeIcon />, roles: [UserRole.Admin, UserRole.Manager] },
   ];

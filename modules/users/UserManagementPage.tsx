@@ -1,29 +1,103 @@
-import React from 'react';
-import { MOCK_USERS } from '../../constants/mockData';
+import React, { useState, useContext } from 'react';
 import { User, UserRole } from '../../types';
+import { UserContext, DataContext } from '../../App';
+import { RoleBadge } from '../../components/Badges';
 
 interface UserManagementPageProps {
     onSelectUser: (id: string) => void;
 }
 
-const RoleBadge: React.FC<{ role: UserRole }> = ({ role }) => {
-    const roleColors = {
-        [UserRole.Admin]: 'bg-red-100 text-red-800',
-        [UserRole.Manager]: 'bg-indigo-100 text-indigo-800',
-        [UserRole.Staff]: 'bg-blue-100 text-blue-800',
-        [UserRole.AssetManager]: 'bg-yellow-100 text-yellow-800',
+const AddUserModal: React.FC<{
+    isOpen: boolean;
+    onClose: () => void;
+    onSave: (user: User) => void;
+}> = ({ isOpen, onClose, onSave }) => {
+    const [name, setName] = useState('');
+    const [role, setRole] = useState<UserRole>(UserRole.Staff);
+    const [department, setDepartment] = useState('');
+
+    const handleSubmit = () => {
+        if (!name.trim() || !department.trim()) {
+            alert('Nama dan departemen harus diisi.');
+            return;
+        }
+
+        const newUser: User = {
+            id: `u${Date.now()}`,
+            name,
+            role,
+            department,
+            avatarUrl: `https://i.pravatar.cc/150?u=u${Date.now()}`,
+        };
+
+        onSave(newUser);
+        onClose(); // Close modal after saving
     };
-    return <span className={`px-2 py-1 text-xs font-semibold rounded-full ${roleColors[role]}`}>{role}</span>
-}
+    
+    // Reset state when modal is closed
+    React.useEffect(() => {
+        if (!isOpen) {
+            setName('');
+            setRole(UserRole.Staff);
+            setDepartment('');
+        }
+    }, [isOpen]);
+
+    if (!isOpen) return null;
+
+    return (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-md">
+                <h3 className="text-xl font-bold mb-4 dark:text-white">Tambah Pengguna Baru</h3>
+                <div className="space-y-4">
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Nama Lengkap</label>
+                        <input type="text" value={name} onChange={(e) => setName(e.target.value)} className="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary text-gray-900 dark:text-gray-100" />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Peran (Role)</label>
+                        <select value={role} onChange={(e) => setRole(e.target.value as UserRole)} className="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary text-gray-900 dark:text-gray-100">
+                            {Object.values(UserRole).map(r => <option key={r} value={r}>{r}</option>)}
+                        </select>
+                    </div>
+                     <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Departemen</label>
+                        <input type="text" value={department} onChange={(e) => setDepartment(e.target.value)} className="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary text-gray-900 dark:text-gray-100" />
+                    </div>
+                </div>
+                <div className="mt-6 flex justify-end gap-3">
+                    <button onClick={onClose} className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-100 dark:hover:bg-gray-500">Batal</button>
+                    <button onClick={handleSubmit} className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-blue-700">Simpan Pengguna</button>
+                </div>
+            </div>
+        </div>
+    );
+};
 
 const UserManagementPage: React.FC<UserManagementPageProps> = ({ onSelectUser }) => {
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const userContext = useContext(UserContext);
+    const dataContext = useContext(DataContext);
+    
+    if(!userContext || !dataContext) return null;
+
+    const { allUsers, addUser } = dataContext;
+
+    const handleSaveUser = (newUser: User) => {
+        addUser(newUser);
+    };
+
+    const canAddUser = userContext.user.role === UserRole.Admin;
+
     return (
         <div className="bg-surface dark:bg-gray-800 rounded-xl shadow-lg p-6">
             <div className="flex justify-between items-center mb-6">
                 <h2 className="text-2xl font-bold text-text-primary dark:text-gray-100">User Management</h2>
-                <button onClick={() => alert('Fitur tambah pengguna baru belum tersedia.')} className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-blue-700 transition">
-                    Tambah Pengguna Baru
-                </button>
+                {canAddUser && (
+                    <button onClick={() => setIsModalOpen(true)} className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-blue-700 transition">
+                        Tambah Pengguna Baru
+                    </button>
+                )}
             </div>
             <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
@@ -37,7 +111,7 @@ const UserManagementPage: React.FC<UserManagementPageProps> = ({ onSelectUser })
                         </tr>
                     </thead>
                     <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                        {MOCK_USERS.map((user: User) => (
+                        {allUsers.map((user: User) => (
                             <tr key={user.id}>
                                 <td className="px-6 py-4 whitespace-nowrap">
                                     <div className="flex items-center">
@@ -66,6 +140,11 @@ const UserManagementPage: React.FC<UserManagementPageProps> = ({ onSelectUser })
                     </tbody>
                 </table>
             </div>
+            <AddUserModal
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                onSave={handleSaveUser}
+            />
         </div>
     );
 };

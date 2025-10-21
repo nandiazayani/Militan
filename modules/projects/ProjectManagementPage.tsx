@@ -1,29 +1,13 @@
 import React, { useState, useContext } from 'react';
-import { MOCK_PROJECTS, MOCK_USERS } from '../../constants/mockData';
 import { Project, ProjectStatus, User, UserRole } from '../../types';
-import { UserContext } from '../../App';
+import { UserContext, DataContext } from '../../App';
+import { ProjectStatusBadge } from '../../components/Badges';
 
 interface ProjectManagementPageProps {
     onSelectProject: (id: string) => void;
 }
 
-const ProjectStatusBadge: React.FC<{ status: ProjectStatus }> = ({ status }) => {
-    const statusStyles = {
-      [ProjectStatus.OnProgress]: 'bg-blue-100 text-blue-800',
-      [ProjectStatus.Completed]: 'bg-green-100 text-green-800',
-      [ProjectStatus.Pitching]: 'bg-yellow-100 text-yellow-800',
-      [ProjectStatus.Approved]: 'bg-indigo-100 text-indigo-800',
-      [ProjectStatus.Revision]: 'bg-orange-100 text-orange-800',
-      [ProjectStatus.Archived]: 'bg-gray-100 text-gray-800',
-    };
-    return (
-      <span className={`px-2 py-1 text-xs font-semibold rounded-full ${statusStyles[status] || 'bg-gray-100 text-gray-800'}`}>
-        {status}
-      </span>
-    );
-};
-
-const AddProjectModal: React.FC<{ isOpen: boolean; onClose: () => void; onSave: (project: Project) => void; }> = ({ isOpen, onClose, onSave }) => {
+const AddProjectModal: React.FC<{ isOpen: boolean; onClose: () => void; onSave: (project: Project) => void; allUsers: User[] }> = ({ isOpen, onClose, onSave, allUsers }) => {
     const [name, setName] = useState('');
     const [picId, setPicId] = useState('');
     const [startDate, setStartDate] = useState('');
@@ -35,7 +19,7 @@ const AddProjectModal: React.FC<{ isOpen: boolean; onClose: () => void; onSave: 
             alert('Harap isi semua kolom yang wajib diisi.');
             return;
         }
-        const pic = MOCK_USERS.find(u => u.id === picId);
+        const pic = allUsers.find(u => u.id === picId);
         if (!pic) return;
 
         const newProject: Project = {
@@ -45,13 +29,27 @@ const AddProjectModal: React.FC<{ isOpen: boolean; onClose: () => void; onSave: 
             startDate,
             endDate,
             status: ProjectStatus.Pitching,
-            budget: { modal, pengeluaran: 0, pemasukan: 0 },
+            budget: { modal, pemasukan: 0 },
             team: [],
             vendors: [],
+            expenses: [],
+            tasks: [],
+            history: [],
         };
         onSave(newProject);
         onClose();
     };
+    
+    React.useEffect(() => {
+      if (!isOpen) {
+        setName('');
+        setPicId('');
+        setStartDate('');
+        setEndDate('');
+        setModal(0);
+      }
+    }, [isOpen]);
+
 
     if (!isOpen) return null;
 
@@ -68,7 +66,7 @@ const AddProjectModal: React.FC<{ isOpen: boolean; onClose: () => void; onSave: 
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Person in Charge (PIC)</label>
                         <select value={picId} onChange={(e) => setPicId(e.target.value)} className="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary text-gray-900 dark:text-gray-100">
                             <option value="">-- Pilih PIC --</option>
-                            {MOCK_USERS.filter(u => u.role === UserRole.Manager || u.role === UserRole.Staff).map(user => (
+                            {allUsers.filter(u => u.role === UserRole.Manager || u.role === UserRole.Staff).map(user => (
                                 <option key={user.id} value={user.id}>{user.name}</option>
                             ))}
                         </select>
@@ -97,27 +95,54 @@ const AddProjectModal: React.FC<{ isOpen: boolean; onClose: () => void; onSave: 
     );
 };
 
+const SummaryCard: React.FC<{ title: string; value: string; icon: React.ReactNode }> = ({ title, value, icon }) => (
+    <div className="bg-gray-50 dark:bg-gray-700/50 p-4 rounded-lg flex items-center shadow-sm">
+        <div className="p-3 rounded-full bg-blue-100 text-primary mr-4">
+            {icon}
+        </div>
+        <div>
+            <p className="text-sm text-gray-500 dark:text-gray-400">{title}</p>
+            <p className="text-xl font-bold text-gray-900 dark:text-gray-100">{value}</p>
+        </div>
+    </div>
+);
+
 const ProjectManagementPage: React.FC<ProjectManagementPageProps> = ({ onSelectProject }) => {
-    const [projects, setProjects] = useState<Project[]>(MOCK_PROJECTS);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const userContext = useContext(UserContext);
+    const dataContext = useContext(DataContext);
+    
+    if(!userContext || !dataContext) return null;
+    
+    const { allProjects, allUsers, addProject } = dataContext;
 
-    const handleSaveProject = (newProject: Project) => {
-        setProjects([newProject, ...projects]);
-    };
+    const canAddProject = userContext.user.role === UserRole.Admin || userContext.user.role === UserRole.Manager;
 
-    const canAddProject = userContext?.user.role === UserRole.Admin || userContext?.user.role === UserRole.Manager;
+    const totalProjects = allProjects.length;
+    const onProgressProjects = allProjects.filter(p => p.status === ProjectStatus.OnProgress).length;
+    const totalBudget = allProjects.reduce((sum, p) => sum + p.budget.modal, 0);
 
     return (
         <div className="bg-surface dark:bg-gray-800 rounded-xl shadow-lg p-6">
             <div className="flex justify-between items-center mb-6">
                 <h2 className="text-2xl font-bold text-text-primary dark:text-gray-100">Project Management</h2>
                 {canAddProject && (
-                    <button onClick={() => setIsModalOpen(true)} className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-blue-700 transition">
-                        Tambah Proyek Baru
+                    <button 
+                        onClick={() => setIsModalOpen(true)} 
+                        className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-blue-700 transition shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
+                    >
+                        <PlusIcon />
+                        <span>Tambah Proyek Baru</span>
                     </button>
                 )}
             </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                <SummaryCard title="Total Proyek" value={totalProjects.toString()} icon={<FolderCollectionIcon />} />
+                <SummaryCard title="Proyek Berjalan" value={onProgressProjects.toString()} icon={<BeakerIcon />} />
+                <SummaryCard title="Total Anggaran" value={`Rp ${new Intl.NumberFormat('id-ID').format(totalBudget)}`} icon={<CurrencyDollarIcon />} />
+            </div>
+
             <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                     <thead className="bg-gray-50 dark:bg-gray-700/50">
@@ -130,7 +155,7 @@ const ProjectManagementPage: React.FC<ProjectManagementPageProps> = ({ onSelectP
                         </tr>
                     </thead>
                     <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                        {projects.map((project: Project) => (
+                        {allProjects.map((project: Project) => (
                             <tr key={project.id}>
                                 <td className="px-6 py-4 whitespace-nowrap">
                                     <div className="text-sm font-medium text-gray-900 dark:text-gray-100">{project.name}</div>
@@ -160,10 +185,17 @@ const ProjectManagementPage: React.FC<ProjectManagementPageProps> = ({ onSelectP
              <AddProjectModal 
                 isOpen={isModalOpen} 
                 onClose={() => setIsModalOpen(false)}
-                onSave={handleSaveProject}
+                onSave={addProject}
+                allUsers={allUsers}
             />
         </div>
     );
 };
+
+// Icons
+const FolderCollectionIcon = () => <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6"><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12.75V12A2.25 2.25 0 014.5 9.75h15A2.25 2.25 0 0121.75 12v.75m-8.69-6.44l-2.12-2.12a1.5 1.5 0 00-1.061-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9a2.25 2.25 0 00-2.25-2.25h-5.379a1.5 1.5 0 01-1.06-.44z" /></svg>;
+const BeakerIcon = () => <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6"><path strokeLinecap="round" strokeLinejoin="round" d="M9.75 3.104v5.714a2.25 2.25 0 01-.5 1.581L6 14.25v5.25a1.5 1.5 0 001.5 1.5h6a1.5 1.5 0 001.5-1.5v-5.25l-3.25-3.851a2.25 2.25 0 01-.5-1.581V3.104a2.25 2.25 0 00-3.75 0zM9.75 3.104a2.25 2.25 0 013.75 0M9.75 3.104a2.25 2.25 0 00-3.75 0M14.25 3.104a2.25 2.25 0 013.75 0M14.25 3.104a2.25 2.25 0 00-3.75 0" /></svg>;
+const CurrencyDollarIcon = () => <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6"><path strokeLinecap="round" strokeLinejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182.79-.623 1.8-1 2.833-1.017A4.5 4.5 0 0116.5 9.5m-3.75 2.25m3.75-2.25a4.5 4.5 0 00-9 0" /></svg>;
+const PlusIcon = () => <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>;
 
 export default ProjectManagementPage;
