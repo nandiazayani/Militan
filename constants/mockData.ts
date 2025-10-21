@@ -1,3 +1,4 @@
+// FIX: Corrected import path for types
 import { User, UserRole, Project, ProjectStatus, Expense, ExpenseStatus, ProjectTask, TaskPriority, Vendor, Asset, AssetStatus, AssetType, Document, UserTask, Notification, DailyReport, DailyReportStatus, LpjStatus } from '../types';
 
 export const MOCK_USERS: User[] = [
@@ -28,6 +29,13 @@ const MOCK_VENDORS_1: Vendor[] = [
     { id: 'v2', name: 'Lezat Katering', service: 'Catering', contact: 'Ibu Sinta - 08234567890' },
 ];
 
+export const MOCK_ASSETS: Asset[] = [
+    { id: 'a1', name: 'Kamera Sony A7III', type: AssetType.Permanent, status: AssetStatus.Available, lastMaintenance: '2024-05-20', managedBy: assetManager },
+    { id: 'a2', name: 'Laptop Macbook Pro M1', type: AssetType.Permanent, status: AssetStatus.InUse, lastMaintenance: '2024-06-10', managedBy: staff2 },
+    { id: 'a3', name: 'Drone DJI Mavic 3', type: AssetType.Rent, status: AssetStatus.RentedOut, lastMaintenance: '2024-07-01', rentedUntil: '2024-08-01', managedBy: assetManager },
+    { id: 'a4', name: 'Lighting Godox SL-60W', type: AssetType.Permanent, status: AssetStatus.Maintenance, lastMaintenance: '2024-07-15', managedBy: staff1 },
+];
+
 export const MOCK_PROJECTS: Project[] = [
   {
     id: 'p1',
@@ -45,6 +53,9 @@ export const MOCK_PROJECTS: Project[] = [
       { id: 'h1', timestamp: new Date().toISOString(), user: admin, action: 'membuat proyek.' },
       { id: 'h2', timestamp: new Date().toISOString(), user: manager, action: 'menambahkan vendor Gema Suara.' },
     ],
+    usedAssets: [
+        { asset: MOCK_ASSETS[1], checkoutDate: '2024-07-15T10:00:00Z' }
+    ]
   },
   {
     id: 'p2',
@@ -101,13 +112,6 @@ export const MOCK_PROJECTS: Project[] = [
     tasks: [],
     history: [],
   },
-];
-
-export const MOCK_ASSETS: Asset[] = [
-    { id: 'a1', name: 'Kamera Sony A7III', type: AssetType.Permanent, status: AssetStatus.Available, lastMaintenance: '2024-05-20', managedBy: assetManager },
-    { id: 'a2', name: 'Laptop Macbook Pro M1', type: AssetType.Permanent, status: AssetStatus.InUse, lastMaintenance: '2024-06-10', managedBy: staff2 },
-    { id: 'a3', name: 'Drone DJI Mavic 3', type: AssetType.Rent, status: AssetStatus.RentedOut, lastMaintenance: '2024-07-01', rentedUntil: '2024-08-01', managedBy: assetManager },
-    { id: 'a4', name: 'Lighting Godox SL-60W', type: AssetType.Permanent, status: AssetStatus.Maintenance, lastMaintenance: '2024-07-15', managedBy: staff1 },
 ];
 
 export const MOCK_DOCUMENTS: Document[] = [

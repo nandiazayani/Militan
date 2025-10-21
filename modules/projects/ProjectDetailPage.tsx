@@ -1,6 +1,7 @@
-import React, { useContext, useState, useEffect, useMemo } from 'react';
-import { DataContext, UserContext } from '../../App';
-import { Project, Expense, ProjectTask, Vendor, ProjectHistoryLog, UserRole, Lpj, LpjStatus, ProjectStatus } from '../../types';
+import React, { useContext, useState, useMemo, useCallback } from 'react';
+import { DataContext } from '../../contexts/DataContext';
+import { UserContext } from '../../contexts/UserContext';
+import { Project, User, Vendor, Expense, ProjectTask, UserRole, ProjectHistoryLog, Lpj, UsedAssetLog, Asset, AssetStatus } from '../../types';
 
 import ProjectHeader from '../../components/projects/ProjectHeader';
 import ProjectOverview from '../../components/projects/ProjectOverview';
@@ -11,11 +12,14 @@ import ExpenseCard from '../../components/projects/ExpenseCard';
 import HistoryCard from '../../components/projects/HistoryCard';
 import LpjCard from '../../components/projects/LpjCard';
 import GeminiProjectAssistant from '../../components/projects/GeminiProjectAssistant';
+import ProjectAssetLogCard from '../../components/projects/ProjectAssetLogCard';
 
-import ExpenseModal from './modals/ExpenseModal';
 import VendorModal from './modals/VendorModal';
+import ExpenseModal from './modals/ExpenseModal';
 import TaskModal from './modals/TaskModal';
 import LpjModal from './modals/LpjModal';
+import CheckoutAssetModal from './modals/CheckoutAssetModal';
+
 
 interface ProjectDetailPageProps {
     projectId: string;
@@ -24,198 +28,121 @@ interface ProjectDetailPageProps {
     setHasUnsavedChanges: (hasChanges: boolean) => void;
 }
 
-type ActiveModal = {
-    type: 'expense' | 'vendor' | 'task' | 'lpj' | null;
-    data?: Expense | Vendor | ProjectTask | Lpj | null;
-};
+type ModalType = 'vendor' | 'expense' | 'task' | 'lpj' | 'checkoutAsset';
 
 const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({ projectId, onBack, onSelectUser, setHasUnsavedChanges }) => {
     const dataContext = useContext(DataContext);
     const userContext = useContext(UserContext);
 
-    const [project, setProject] = useState<Project | null>(null);
-    const [originalProject, setOriginalProject] = useState<Project | null>(null);
-    const [activeModal, setActiveModal] = useState<ActiveModal>({ type: null, data: null });
+    const [modalState, setModalState] = useState<{ type: ModalType | null; data: any | null }>({ type: null, data: null });
 
-    const isDirty = useMemo(() => {
-        return JSON.stringify(project) !== JSON.stringify(originalProject);
-    }, [project, originalProject]);
+    const project = useMemo(() => {
+        return dataContext?.allProjects.find(p => p.id === projectId);
+    }, [dataContext?.allProjects, projectId]);
 
-    useEffect(() => {
-        setHasUnsavedChanges(isDirty);
-    }, [isDirty, setHasUnsavedChanges]);
-
-    useEffect(() => {
-        const foundProject = dataContext?.allProjects.find(p => p.id === projectId);
-        if (foundProject) {
-            const projectCopy = JSON.parse(JSON.stringify(foundProject));
-            setProject(projectCopy);
-            setOriginalProject(JSON.parse(JSON.stringify(foundProject)));
-        }
-    }, [projectId, dataContext?.allProjects]);
-    
-    if (!dataContext || !userContext) return <div>Loading Context...</div>;
-    const { updateProject } = dataContext;
+    if (!dataContext || !userContext || !project) {
+        return <div>Loading project details... or project not found.</div>;
+    }
+    const { updateProject, allUsers, addNotification, allAssets, updateAsset } = dataContext;
     const { user: currentUser } = userContext;
-    if (!project || !originalProject) return <div>Loading Project...</div>;
 
-    const canEditProject = currentUser.role === UserRole.Admin || currentUser.role === UserRole.Manager || project.pic.id === currentUser.id;
+    const canEdit = currentUser.role === UserRole.Admin || currentUser.role === UserRole.Manager || project.pic.id === currentUser.id;
 
-    const createHistoryLog = (action: string): ProjectHistoryLog => ({
+    const createHistoryLog = useCallback((action: string): ProjectHistoryLog => ({
         id: `h-${Date.now()}`,
         timestamp: new Date().toISOString(),
         user: currentUser,
-        action,
-    });
+        action: action
+    }), [currentUser]);
 
-    const handleBack = () => {
-        if (isDirty) {
-            if (window.confirm('Anda memiliki perubahan yang belum disimpan. Apakah Anda yakin ingin keluar?')) {
-                onBack();
-            }
-        } else {
-            onBack();
+    const handleUpdateProject = useCallback((updater: (prev: Project) => Partial<Project>, log?: ProjectHistoryLog) => {
+        const updatedFields = updater(project);
+        const newHistory = log ? [log, ...project.history] : project.history;
+        updateProject({ ...project, ...updatedFields, history: newHistory });
+    }, [project, updateProject]);
+    
+    const handleOpenModal = (type: ModalType, data: any = null) => {
+        setModalState({ type, data });
+    };
+
+    const handleCloseModal = () => {
+        setModalState({ type: null, data: null });
+    };
+
+    const handleSave = {
+        vendor: (vendor: Vendor) => {
+            const isEditing = project.vendors.some(v => v.id === vendor.id);
+            const log = createHistoryLog(isEditing ? `mengedit vendor "${vendor.name}".` : `menambahkan vendor baru "${vendor.name}".`);
+            handleUpdateProject(prev => ({
+                vendors: isEditing ? prev.vendors.map(v => v.id === vendor.id ? vendor : v) : [...prev.vendors, vendor]
+            }), log);
+            handleCloseModal();
+        },
+        expense: (expense: Expense) => {
+            const isEditing = project.expenses.some(e => e.id === expense.id);
+            const log = createHistoryLog(isEditing ? `mengedit pengeluaran "${expense.item}".` : `menambahkan pengeluaran baru "${expense.item}".`);
+            handleUpdateProject(prev => ({
+                expenses: isEditing ? prev.expenses.map(e => e.id === expense.id ? expense : e) : [...prev.expenses, expense]
+            }), log);
+            handleCloseModal();
+        },
+        task: (task: ProjectTask) => {
+            const isEditing = project.tasks.some(t => t.id === task.id);
+            const log = createHistoryLog(isEditing ? `mengedit tugas "${task.title}".` : `menambahkan tugas baru "${task.title}".`);
+            handleUpdateProject(prev => ({
+                tasks: isEditing ? prev.tasks.map(t => t.id === task.id ? task : t) : [...prev.tasks, task]
+            }), log);
+            handleCloseModal();
+        },
+        lpj: (lpj: Lpj) => {
+            const log = createHistoryLog(project.lpj ? 'memperbarui LPJ.' : 'membuat LPJ.');
+            const newLpj = { ...lpj, submittedDate: new Date().toISOString().split('T')[0] };
+            handleUpdateProject(() => ({ lpj: newLpj }), log);
+            handleCloseModal();
+        },
+        checkoutAsset: (asset: Asset) => {
+            const newLog: UsedAssetLog = { asset, checkoutDate: new Date().toISOString() };
+            const historyLog = createHistoryLog(`menggunakan aset "${asset.name}" untuk proyek.`);
+            handleUpdateProject(prev => ({
+                usedAssets: [...(prev.usedAssets || []), newLog]
+            }), historyLog);
+            updateAsset({ ...asset, status: AssetStatus.InUse });
+            handleCloseModal();
         }
     };
     
-    const handleSaveChanges = () => {
-        if (project) {
-            updateProject(project);
-            setOriginalProject(JSON.parse(JSON.stringify(project)));
-            alert('Perubahan disimpan!');
-        }
-    };
-
-    const updateProjectState = (updater: (prev: Project) => Partial<Project>, log?: ProjectHistoryLog) => {
-        setProject(prev => {
-            if (!prev) return null;
-            const updates = updater(prev);
-            const newHistory = log ? [log, ...(prev.history || [])] : prev.history;
-            return { ...prev, ...updates, history: newHistory };
-        });
-    };
-
-    const handleSaveTask = (savedTask: ProjectTask) => {
-        const isEditing = project.tasks.some(t => t.id === savedTask.id);
-        const log = createHistoryLog(isEditing ? `Memperbarui tugas: "${savedTask.title}".` : `Menambahkan tugas baru: "${savedTask.title}".`);
-        updateProjectState(prev => ({
-            tasks: isEditing ? prev.tasks.map(t => (t.id === savedTask.id ? savedTask : t)) : [savedTask, ...prev.tasks]
-        }), log);
-        setActiveModal({ type: null });
-    };
-
-    const handleSaveExpense = (savedExpense: Expense) => {
-        const isEditing = project.expenses.some(e => e.id === savedExpense.id);
-        const log = createHistoryLog(isEditing ? `Memperbarui pengeluaran: "${savedExpense.item}".` : `Menambahkan pengeluaran: "${savedExpense.item}".`);
-        updateProjectState(prev => ({
-            expenses: isEditing ? prev.expenses.map(e => (e.id === savedExpense.id ? savedExpense : e)) : [savedExpense, ...prev.expenses]
-        }), log);
-        setActiveModal({ type: null });
-    };
-
-    const handleSaveVendor = (savedVendor: Vendor) => {
-        const isEditing = project.vendors.some(v => v.id === savedVendor.id);
-        const log = createHistoryLog(isEditing ? `Memperbarui vendor: "${savedVendor.name}".` : `Menambahkan vendor: "${savedVendor.name}".`);
-        updateProjectState(prev => ({
-            vendors: isEditing ? prev.vendors.map(v => (v.id === savedVendor.id ? savedVendor : v)) : [savedVendor, ...prev.vendors]
-        }), log);
-        setActiveModal({ type: null });
-    };
-    
-    const handleSaveLpj = (savedLpj: Lpj) => {
-        const isEditing = !!project.lpj;
-        const logAction = savedLpj.status === LpjStatus.Submitted && project.lpj?.status !== LpjStatus.Submitted
-            ? 'Mengajukan Laporan Pertanggungjawaban untuk direview.'
-            : isEditing ? 'Memperbarui draf Laporan Pertanggungjawaban.' : 'Membuat draf Laporan Pertanggungjawaban.';
-        const log = createHistoryLog(logAction);
-        
-        const lpjToSave = { ...savedLpj };
-        if (savedLpj.status === LpjStatus.Submitted && !isEditing) {
-            lpjToSave.submittedDate = new Date().toISOString().split('T')[0];
-        }
-        
-        updateProjectState(() => ({ lpj: lpjToSave }), log);
-        setActiveModal({ type: null });
-    };
-
-    const openModal = (type: ActiveModal['type'], data: ActiveModal['data'] = null) => {
-        setActiveModal({ type, data });
-    };
-
     return (
         <div className="space-y-6">
-            <ProjectHeader project={project} onBack={handleBack} onSave={handleSaveChanges} canEdit={canEditProject} />
-
+            <ProjectHeader project={project} onBack={onBack} onSave={() => alert('Save clicked')} canEdit={canEdit} />
             <ProjectOverview project={project} onSelectUser={onSelectUser} />
 
             <GeminiProjectAssistant project={project} />
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div className="lg:col-span-1 flex flex-col gap-6">
-                    <TeamCard team={[project.pic, ...project.team]} onSelectUser={onSelectUser} />
-                    <VendorCard vendors={project.vendors} onOpenModal={openModal} canEdit={canEditProject} />
+                <div className="lg:col-span-2 space-y-6">
+                    <TaskCard tasks={project.tasks} onOpenModal={handleOpenModal} onUpdateProject={handleUpdateProject} createHistoryLog={createHistoryLog} canEdit={canEdit} />
+                    <ExpenseCard expenses={project.expenses} projectName={project.name} onOpenModal={handleOpenModal} onUpdateProject={handleUpdateProject} createHistoryLog={createHistoryLog} canEdit={canEdit} />
                 </div>
-                <div className="lg:col-span-2 flex flex-col gap-6">
-                    <TaskCard tasks={project.tasks} onOpenModal={openModal} onUpdateProject={updateProjectState} createHistoryLog={createHistoryLog} canEdit={canEditProject}/>
+                <div className="space-y-6">
+                    <TeamCard team={[project.pic, ...project.team]} onSelectUser={onSelectUser} />
+                    <VendorCard vendors={project.vendors} onOpenModal={handleOpenModal} canEdit={canEdit} />
+                    <ProjectAssetLogCard 
+                        usedAssets={project.usedAssets || []}
+                        onCheckoutAsset={() => handleOpenModal('checkoutAsset')}
+                        onUpdateProject={handleUpdateProject}
+                        createHistoryLog={createHistoryLog}
+                        canEdit={canEdit}
+                    />
+                    <LpjCard project={project} onOpenModal={() => handleOpenModal('lpj')} onUpdateProject={handleUpdateProject} createHistoryLog={createHistoryLog} />
+                    <HistoryCard history={project.history} />
                 </div>
             </div>
             
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div className="lg:col-span-2">
-                    <ExpenseCard 
-                        expenses={project.expenses} 
-                        projectName={project.name}
-                        onOpenModal={openModal} 
-                        onUpdateProject={updateProjectState} 
-                        createHistoryLog={createHistoryLog} 
-                        canEdit={canEditProject} 
-                    />
-                </div>
-                <div className="lg:col-span-1 flex flex-col gap-6">
-                    <HistoryCard history={project.history} />
-                    <LpjCard 
-                        project={project} 
-                        onOpenModal={() => openModal('lpj', project.lpj)} 
-                        onUpdateProject={updateProjectState} 
-                        createHistoryLog={createHistoryLog} 
-                    />
-                </div>
-            </div>
-
-            {activeModal.type === 'expense' && (
-                <ExpenseModal
-                    isOpen={true}
-                    onClose={() => setActiveModal({ type: null })}
-                    onSave={handleSaveExpense}
-                    expense={activeModal.data as Expense | null}
-                />
-            )}
-            {activeModal.type === 'vendor' && (
-                <VendorModal
-                    isOpen={true}
-                    onClose={() => setActiveModal({ type: null })}
-                    onSave={handleSaveVendor}
-                    vendor={activeModal.data as Vendor | null}
-                />
-            )}
-            {activeModal.type === 'task' && (
-                <TaskModal
-                    isOpen={true}
-                    onClose={() => setActiveModal({ type: null })}
-                    onSave={handleSaveTask}
-                    task={activeModal.data as ProjectTask | null}
-                    projectTeam={[project.pic, ...project.team]}
-                    allTasks={project.tasks}
-                />
-            )}
-             {activeModal.type === 'lpj' && (
-                <LpjModal
-                    isOpen={true}
-                    onClose={() => setActiveModal({ type: null })}
-                    onSave={handleSaveLpj}
-                    project={project}
-                />
-            )}
+            {modalState.type === 'vendor' && <VendorModal isOpen={true} onClose={handleCloseModal} onSave={handleSave.vendor} vendor={modalState.data} />}
+            {modalState.type === 'expense' && <ExpenseModal isOpen={true} onClose={handleCloseModal} onSave={handleSave.expense} expense={modalState.data} />}
+            {modalState.type === 'task' && <TaskModal isOpen={true} onClose={handleCloseModal} onSave={handleSave.task} task={modalState.data} projectTeam={[project.pic, ...project.team]} allTasks={project.tasks} />}
+            {modalState.type === 'lpj' && <LpjModal isOpen={true} onClose={handleCloseModal} onSave={handleSave.lpj} project={project} />}
+            {modalState.type === 'checkoutAsset' && <CheckoutAssetModal isOpen={true} onClose={handleCloseModal} onCheckout={handleSave.checkoutAsset} allAssets={allAssets} />}
         </div>
     );
 };

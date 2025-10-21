@@ -1,6 +1,7 @@
 
 import React, { useState, useContext } from 'react';
-import { DataContext } from '../../App';
+// FIX: Corrected import path for DataContext to resolve context type errors.
+import { DataContext } from '../../contexts/DataContext';
 import { GoogleGenAI } from "@google/genai";
 
 const AISummaryCard: React.FC = () => {

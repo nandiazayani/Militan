@@ -21,7 +21,7 @@ const TeamCard: React.FC<TeamCardProps> = ({ team, onSelectUser }) => {
                             <img src={member.avatarUrl} alt={member.name} className="w-8 h-8 rounded-full mr-3" />
                             <div>
                                 <p className="font-medium text-sm">{member.name}</p>
-                                <p className="text-xs text-gray-500">{member.role}</p>
+                                <p className="text-xs text-text-primary">{member.role}</p>
                             </div>
                         </div>
                     </li>

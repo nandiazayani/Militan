@@ -1,5 +1,6 @@
 import React, { useState, useContext, useMemo } from 'react';
-import { DataContext } from '../../App';
+import { DataContext } from '../../contexts/DataContext';
+// FIX: Corrected import path for types
 import { Project, UserTask } from '../../types';
 
 interface CalendarEvent {
@@ -68,6 +69,10 @@ const CalendarPage: React.FC<{
             return newDate;
         });
     };
+    
+    const jumpToToday = () => {
+        setCurrentDate(new Date());
+    };
 
     const monthStart = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
     const monthEnd = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
@@ -84,17 +89,31 @@ const CalendarPage: React.FC<{
     }
     
     const dayNames = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
+    
+    // FIX: Create a timezone-safe function to format date to YYYY-MM-DD string to avoid off-by-one errors.
+    const toLocalISOString = (date: Date) => {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    };
+
+    const todayStr = useMemo(() => toLocalISOString(new Date()), []);
+
 
     return (
         <div className="bg-surface rounded-xl shadow-lg p-6 h-full flex flex-col">
             <div className="flex justify-between items-center mb-4">
                 <h2 className="text-2xl font-bold text-text-primary">Kalender Tim</h2>
                 <div className="flex items-center gap-4">
-                    <button onClick={() => changeMonth(-1)} className="p-2 rounded-full hover:bg-gray-700"><ChevronLeftIcon /></button>
-                    <span className="text-lg font-semibold w-36 text-center">
+                     <span className="text-lg font-semibold w-36 text-center">
                         {currentDate.toLocaleString('id-ID', { month: 'long', year: 'numeric' })}
                     </span>
-                    <button onClick={() => changeMonth(1)} className="p-2 rounded-full hover:bg-gray-700"><ChevronRightIcon /></button>
+                    <div className="flex items-center border border-gray-600 rounded-lg">
+                        <button onClick={() => changeMonth(-1)} className="p-2 hover:bg-gray-700 rounded-l-md border-r border-gray-600"><ChevronLeftIcon /></button>
+                        <button onClick={jumpToToday} className="px-4 py-1.5 text-sm font-semibold hover:bg-gray-700 transition">Hari Ini</button>
+                        <button onClick={() => changeMonth(1)} className="p-2 hover:bg-gray-700 rounded-r-md border-l border-gray-600"><ChevronRightIcon /></button>
+                    </div>
                 </div>
             </div>
             <div className="grid grid-cols-7 gap-1 text-center font-semibold text-sm text-gray-400 mb-2">
@@ -102,10 +121,10 @@ const CalendarPage: React.FC<{
             </div>
             <div className="grid grid-cols-7 grid-rows-5 gap-1 flex-grow">
                 {days.map((d, i) => {
-                    const dateStr = d.toISOString().split('T')[0];
+                    const dateStr = toLocalISOString(d); // FIX: Use the timezone-safe function
                     const eventsForDay = events.filter(e => e.date === dateStr);
                     const isCurrentMonth = d.getMonth() === currentDate.getMonth();
-                    const isToday = new Date().toISOString().split('T')[0] === dateStr;
+                    const isToday = todayStr === dateStr;
 
                     return (
                         <div key={i} className={`p-2 border border-gray-700/50 rounded-md flex flex-col ${isCurrentMonth ? 'bg-surface' : 'bg-gray-800/50'}`}>

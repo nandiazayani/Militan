@@ -34,7 +34,7 @@ const HistoryCard: React.FC<HistoryCardProps> = ({ history = [] }) => {
                                 <p className="text-sm dark:text-gray-200">
                                     <strong className="font-medium">{log.user.name}</strong> {log.action}
                                 </p>
-                                <p className="text-xs text-gray-500 dark:text-gray-400">{formatTimestamp(log.timestamp)}</p>
+                                <p className="text-xs text-text-primary">{formatTimestamp(log.timestamp)}</p>
                             </div>
                         </div>
                     ))

@@ -2,7 +2,7 @@ import React from 'react';
 import { ProjectTask, Project, ProjectHistoryLog } from '../../types';
 import { PriorityBadge } from '../Badges';
 import { useContext } from 'react';
-import { DataContext } from '../../App';
+import { DataContext } from '../../contexts/DataContext';
 
 interface TaskCardProps {
     tasks: ProjectTask[];
@@ -87,7 +87,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ tasks, onOpenModal, onUpdateProject
                                 <div className="flex items-center justify-between">
                                     <div>
                                         <p className={`font-medium text-sm ${task.completed ? 'line-through text-gray-500' : 'dark:text-gray-100'}`}>{task.title}</p>
-                                        <p className={`text-xs ${isOverdue ? 'text-red-600 dark:text-red-400 font-semibold' : 'text-gray-500 dark:text-gray-400'}`}>
+                                        <p className={`text-xs ${isOverdue ? 'text-red-600 dark:text-red-400 font-semibold' : 'text-text-primary'}`}>
                                             for {task.assignee.name} - Due: {task.dueDate}
                                         </p>
                                     </div>

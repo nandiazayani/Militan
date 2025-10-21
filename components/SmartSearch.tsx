@@ -1,6 +1,6 @@
-
 import React, { useState, useEffect, useContext, useRef, useCallback } from 'react';
-import { DataContext, UserContext } from '../App';
+import { DataContext } from '../contexts/DataContext';
+import { UserContext } from '../contexts/UserContext';
 import { Project, Document, User, Page } from '../types';
 import { GoogleGenAI, Type } from "@google/genai";
 
@@ -155,8 +155,11 @@ Cari di dalam proyek, dokumen, dan pengguna. Kembalikan HANYA objek JSON yang be
                         {results && (
                             (results.projects.length + results.documents.length + results.users.length > 0) ? (
                                 <>
+                                    {/* FIX: Property 'name' does not exist on type '{ id: string; }'. */}
                                     {results.projects.length > 0 && <ResultGroup title="Proyek" items={results.projects} onClick={p => handleResultClick(() => onSelectProject(p.id))} render={p => p.name} />}
+                                    {/* FIX: Property 'name' does not exist on type '{ id: string; }'. */}
                                     {results.documents.length > 0 && <ResultGroup title="Dokumen" items={results.documents} onClick={d => handleResultClick(() => setCurrentPage('documents'))} render={d => d.name} />}
+                                    {/* FIX: Property 'name' does not exist on type '{ id: string; }'. */}
                                     {results.users.length > 0 && <ResultGroup title="Pengguna" items={results.users} onClick={u => handleResultClick(() => onSelectUser(u.id))} render={u => u.name} />}
                                 </>
                             ) : (
@@ -170,7 +173,7 @@ Cari di dalam proyek, dokumen, dan pengguna. Kembalikan HANYA objek JSON yang be
     );
 };
 
-const ResultGroup = <T extends { id: string }>({ title, items, onClick, render }: { title: string; items: T[]; onClick: (item: T) => void; render: (item: T) => string }) => (
+const ResultGroup = <T extends { id: string; name: string }>({ title, items, onClick, render }: { title: string; items: T[]; onClick: (item: T) => void; render: (item: T) => string }) => (
     <div>
         <h4 className="px-4 py-2 text-xs font-bold text-gray-400 bg-gray-700/50 uppercase">{title}</h4>
         <ul>

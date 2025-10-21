@@ -1,5 +1,7 @@
 import React, { useContext, useState, useRef, useEffect } from 'react';
-import { UserContext, DataContext } from '../App';
+import { UserContext } from '../contexts/UserContext';
+import { DataContext } from '../contexts/DataContext';
+// FIX: Corrected import path for types
 import { User, Page } from '../types';
 import SmartSearch from './SmartSearch';
 import NotificationPanel from './NotificationPanel';
@@ -101,7 +103,7 @@ const Header: React.FC<HeaderProps> = ({ setCurrentPage, hasUnsavedChanges, onLo
                 <img src={user.avatarUrl} alt={user.name} className="w-10 h-10 rounded-full" />
                 <div className='text-left hidden md:block'>
                   <p className="font-semibold text-sm">{user.name}</p>
-                  <p className="text-xs text-text-secondary">{user.role}</p>
+                  <p className="text-xs text-text-primary">{user.role}</p>
                 </div>
                 <ChevronDownIcon className={`transition-transform ${dropdownOpen ? 'rotate-180' : ''}`} />
               </button>

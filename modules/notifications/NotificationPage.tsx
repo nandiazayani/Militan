@@ -1,5 +1,7 @@
+
 import React, { useState, useContext, useMemo } from 'react';
-import { DataContext } from '../../App';
+// FIX: Corrected import path for DataContext to resolve context type errors.
+import { DataContext } from '../../contexts/DataContext';
 import { Notification, NotificationType, Page } from '../../types';
 import { GoogleGenAI } from "@google/genai";
 
@@ -202,7 +204,7 @@ const NotificationPage: React.FC<NotificationPageProps> = ({ onSelectProject, on
                             </div>
                             <div className="flex-1">
                                 <p className={`text-sm ${notification.read ? 'text-gray-300' : 'text-gray-100 font-medium'}`}>{notification.message}</p>
-                                <p className="text-xs text-gray-400 mt-1">{timeSince(notification.timestamp)}</p>
+                                <p className="text-xs text-text-primary mt-1">{timeSince(notification.timestamp)}</p>
                             </div>
                             {!notification.read && <div className="w-2 h-2 bg-primary rounded-full mt-1.5 flex-shrink-0" title="Unread"></div>}
                         </div>

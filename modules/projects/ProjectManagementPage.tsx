@@ -1,7 +1,8 @@
-
 import React, { useState, useContext } from 'react';
+// FIX: Corrected import path for types
 import { Project, ProjectStatus, User, UserRole } from '../../types';
-import { UserContext, DataContext } from '../../App';
+import { UserContext } from '../../contexts/UserContext';
+import { DataContext } from '../../contexts/DataContext';
 import { ProjectStatusBadge } from '../../components/Badges';
 
 interface ProjectManagementPageProps {

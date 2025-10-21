@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+// FIX: Corrected import path for types
 import { Expense, ExpenseStatus } from '../../../types';
 
 interface ExpenseModalProps {
@@ -31,7 +32,8 @@ const ExpenseModal: React.FC<ExpenseModalProps> = ({ isOpen, onClose, onSave, ex
 
     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         if (event.target.files) {
-            const newFiles = Array.from(event.target.files).map(file => file.name);
+            // FIX: Explicitly type 'file' as File to access its 'name' property.
+            const newFiles = Array.from(event.target.files).map((file: File) => file.name);
             setReceiptFilenames(prev => [...new Set([...prev, ...newFiles])]);
         }
     };

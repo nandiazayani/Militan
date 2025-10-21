@@ -1,8 +1,8 @@
-
 import React, { useContext } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+// FIX: Corrected import path for types
 import { Project, ProjectStatus } from '../../types';
-import { DataContext } from '../../App';
+import { DataContext } from '../../contexts/DataContext';
 import { ProjectStatusBadge } from '../../components/Badges';
 import AISummaryCard from './AISummaryCard';
 
@@ -87,7 +87,7 @@ const DashboardPage: React.FC = () => {
                                 </div>
                                 <div className="flex-1">
                                     <p className="text-sm font-medium text-text-primary">{project.name}</p>
-                                    <div className="flex items-center justify-between text-xs text-text-secondary mt-1">
+                                    <div className="flex items-center justify-between text-xs text-text-primary mt-1">
                                         <span>{project.pic.name}</span>
                                         <ProjectStatusBadge status={project.status} />
                                     </div>

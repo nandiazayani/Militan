@@ -1,6 +1,7 @@
-
 import React, { useContext, useState } from 'react';
-import { DataContext, UserContext } from '../../App';
+import { DataContext } from '../../contexts/DataContext';
+import { UserContext } from '../../contexts/UserContext';
+// FIX: Corrected import path for types
 import { User, UserTask, TaskStatus, TaskPriority, UserRole } from '../../types';
 import { RoleBadge, PriorityBadge } from '../../components/Badges';
 import AITaskPrioritizer from '../../components/users/AITaskPrioritizer';
@@ -68,7 +69,8 @@ const TaskModal: React.FC<{
                     <div>
                         <label className="block text-sm font-medium text-gray-300">Prioritas</label>
                         <select value={priority} onChange={e => setPriority(e.target.value as TaskPriority)} className="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary text-gray-100">
-                            {Object.values(TaskPriority).map(p => <option key={p} value={p}>{p}</option>)}
+                            {/* FIX: Explicitly type 'p' to resolve 'unknown' type error. */}
+                            {Object.values(TaskPriority).map((p: TaskPriority) => <option key={p} value={p}>{p}</option>)}
                         </select>
                     </div>
                 </div>

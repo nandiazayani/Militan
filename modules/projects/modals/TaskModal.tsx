@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+// FIX: Corrected import path for types
 import { ProjectTask, User, TaskPriority } from '../../../types';
 
 const getUpstreamDependencies = (taskId: string, allTasks: ProjectTask[]): Set<string> => {
@@ -66,7 +67,8 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, onSave, task, pr
     };
     
     const handleDependencyChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-        const selectedOptions = Array.from(e.target.selectedOptions, option => option.value);
+        // FIX: Explicitly type 'option' as HTMLOptionElement to access its 'value' property.
+        const selectedOptions = Array.from(e.target.selectedOptions, (option: HTMLOptionElement) => option.value);
         setDependencies(selectedOptions);
     };
 
@@ -105,7 +107,8 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, onSave, task, pr
                      <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Prioritas</label>
                         <select value={priority} onChange={(e) => setPriority(e.target.value as TaskPriority)} className="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary text-gray-900 dark:text-gray-100">
-                            {Object.values(TaskPriority).map(p => <option key={p} value={p}>{p}</option>)}
+                            {/* FIX: Explicitly type 'p' to resolve 'unknown' type error. */}
+                            {Object.values(TaskPriority).map((p: TaskPriority) => <option key={p} value={p}>{p}</option>)}
                         </select>
                     </div>
                     <div>
@@ -113,7 +116,7 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, onSave, task, pr
                         <select multiple value={dependencies} onChange={handleDependencyChange} className="mt-1 block w-full h-32 px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary text-gray-900 dark:text-gray-100">
                             {availableTasksForDependency.map(t => <option key={t.id} value={t.id}>{t.title}</option>)}
                         </select>
-                         <p className="text-xs text-gray-500 mt-1 dark:text-gray-400">Tugas ini baru bisa dikerjakan setelah tugas yang dipilih selesai. Tahan Ctrl/Cmd untuk memilih beberapa.</p>
+                         <p className="text-xs text-text-primary mt-1">Tugas ini baru bisa dikerjakan setelah tugas yang dipilih selesai. Tahan Ctrl/Cmd untuk memilih beberapa.</p>
                     </div>
                 </div>
                 <div className="mt-6 flex justify-end gap-3">

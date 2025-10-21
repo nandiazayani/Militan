@@ -1,4 +1,5 @@
 
+
 import React, { useState } from 'react';
 import { UserTask, TaskPriority } from '../../types';
 import { GoogleGenAI, Type } from "@google/genai";
@@ -160,7 +161,7 @@ Kembalikan hasilnya sebagai objek JSON.
                                     <p className="font-medium text-gray-100">{originalTask.title}</p>
                                     <div className="flex items-center gap-2">
                                         <p className="text-gray-400">Saran: <span className="font-semibold text-primary">{pTask.newPriority}</span></p>
-                                        <p className="text-gray-500 italic text-xs">({pTask.reason})</p>
+                                        <p className="text-text-primary italic text-xs">({pTask.reason})</p>
                                     </div>
                                 </li>
                              );

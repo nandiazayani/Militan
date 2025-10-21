@@ -1,6 +1,7 @@
 import React, { useContext } from 'react';
+// FIX: Corrected import path for types
 import { Page, UserRole } from '../types';
-import { UserContext } from '../App';
+import { UserContext } from '../contexts/UserContext';
 
 interface SidebarProps {
   currentPage: Page;
@@ -101,7 +102,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentPage, setCurrentPage }) => {
         <h1 className="text-xl font-bold text-text-primary whitespace-nowrap">MILITAN DASH</h1>
       </div>
       <nav className="flex-1">
-        <h2 className="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Utama</h2>
+        <h2 className="px-3 text-xs font-semibold text-text-secondary uppercase tracking-wider mb-2">Utama</h2>
         <ul className="space-y-2">
           {visibleMainNavItems.map(item => (
             <NavItem key={item.page} {...item} currentPage={currentPage} setCurrentPage={setCurrentPage} />
@@ -109,7 +110,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentPage, setCurrentPage }) => {
         </ul>
         {visibleAdditionalNavItems.length > 0 && (
           <>
-            <h2 className="px-3 mt-8 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Tambahan</h2>
+            <h2 className="px-3 mt-8 text-xs font-semibold text-text-secondary uppercase tracking-wider mb-2">Tambahan</h2>
             <ul className="space-y-2">
               {visibleAdditionalNavItems.map(item => (
                 <NavItem key={item.page} {...item} currentPage={currentPage} setCurrentPage={setCurrentPage} />
@@ -138,7 +139,7 @@ const UsersIcon: React.FC<{ className?: string }> = ({ className }) => <svg xmln
 const OfficeBuildingIcon: React.FC<{ className?: string }> = ({ className }) => <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}><path strokeLinecap="round" strokeLinejoin="round" d="M3.75 21h16.5M4.5 3h15M5.25 3v18m13.5-18v18M9 6.75h6.375a.75.75 0 01.75.75v3.375a.75.75 0 01-.75.75H9a.75.75 0 01-.75-.75V7.5a.75.75 0 01.75-.75zm0 9h6.375a.75.75 0 01.75.75v3.375a.75.75 0 01-.75.75H9a.75.75 0 01-.75-.75v-3.375a.75.75 0 01.75-.75z" /></svg>;
 const SparklesIcon: React.FC<{ className?: string }> = ({ className }) => <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}><path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456zM16.898 20.562L16.25 22.5l-.648-1.938a3.375 3.375 0 00-2.696-2.696L11.25 18l1.938-.648a3.375 3.375 0 002.696-2.696L16.25 13l.648 1.938a3.375 3.375 0 002.696 2.696L21.5 18l-1.938.648a3.375 3.375 0 00-2.696 2.696z" /></svg>;
 const BellIcon: React.FC<{ className?: string }> = ({ className }) => <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}><path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" /></svg>;
-const CogIcon: React.FC<{ className?: string }> = ({ className }) => <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}><path strokeLinecap="round" strokeLinejoin="round" d="M10.343 3.94c.09-.542.56-1.007 1.11-1.227l.128-.051c.66-.264 1.37-.264 2.03 0l.128.051c.55.22 1.02-.685 1.11 1.227l.068.411a11.96 11.96 0 002.822 1.658l.37.153c.64.264 1.04.88 1.04 1.554v.499c0 .674-.4 1.29-.98 1.554l-.37.153a11.96 11.96 0 00-2.822 1.658l-.068.411c-.09.542-.56 1.007-1.11 1.227l-.128.051c-.66.264-1.37.264-2.03 0l-.128-.051c-.55-.22-1.02-.685-1.11-1.227l-.068-.411a11.96 11.96 0 00-2.822-1.658l-.37-.153c-.64-.264-1.04-.88-1.04-1.554v-.499c0-.674.4-1.29.98-1.554l.37-.153a11.96 11.96 0 002.822 1.658l.068-.411zM12 15a3 3 0 100-6 3 3 0 000 6z" /></svg>;
+const CogIcon: React.FC<{ className?: string }> = ({ className }) => <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}><path strokeLinecap="round" strokeLinejoin="round" d="M10.343 3.94c.09-.542.56-1.007 1.11-1.227l.128-.051c.66-.264 1.37-.264 2.03 0l.128.051c.55.22 1.02-.685 1.11 1.227l.068.411a11.96 11.96 0 002.822 1.658l.37.153c.64.264 1.04.88 1.04 1.554v.499c0 .674-.4 1.29.98 1.554l-.37.153a11.96 11.96 0 00-2.822 1.658l-.068.411c-.09.542-.56 1.007-1.11 1.227l-.128.051c-.66.264-1.37.264-2.03 0l-.128-.051c-.55-.22-1.02-.685-1.11-1.227l-.068-.411a11.96 11.96 0 00-2.822-1.658l-.37-.153c-.64-.264-1.04-.88-1.04-1.554v-.499c0-.674.4-1.29.98-1.554l.37-.153a11.96 11.96 0 002.822 1.658l.068.411zM12 15a3 3 0 100-6 3 3 0 000 6z" /></svg>;
 const CalendarIcon: React.FC<{ className?: string }> = ({ className }) => <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}><path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0h18M12 12.75h.008v.008H12v-.008z" /></svg>;
 
 export default Sidebar;

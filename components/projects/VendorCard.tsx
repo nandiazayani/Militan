@@ -24,8 +24,8 @@ const VendorCard: React.FC<VendorCardProps> = ({ vendors, onOpenModal, canEdit }
                         <div className="flex justify-between items-start">
                             <div>
                                 <p className="font-semibold text-sm">{vendor.name}</p>
-                                <p className="text-xs text-gray-500">{vendor.service}</p>
-                                <p className="text-xs text-gray-500 mt-1">{vendor.contact}</p>
+                                <p className="text-xs text-text-primary">{vendor.service}</p>
+                                <p className="text-xs text-text-primary mt-1">{vendor.contact}</p>
                             </div>
                             {canEdit && (
                                 <div className="flex gap-2 flex-shrink-0 ml-2">

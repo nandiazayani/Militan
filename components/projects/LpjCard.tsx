@@ -1,6 +1,6 @@
 import React, { useContext } from 'react';
 import { Project, LpjStatus, UserRole, ProjectStatus } from '../../types';
-import { UserContext } from '../../App';
+import { UserContext } from '../../contexts/UserContext';
 import { LpjStatusBadge } from '../Badges';
 
 interface LpjCardProps {

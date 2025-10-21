@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+// FIX: Corrected import path for types
 import { DailyReport, DailyTask, DailyReportStatus } from '../../../types';
 
 interface DailyReportModalProps {
@@ -42,7 +43,8 @@ const DailyReportModal: React.FC<DailyReportModalProps> = ({ isOpen, onClose, on
     
     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         if (event.target.files && taskToAttachFile) {
-            const newFiles = Array.from(event.target.files).map(file => file.name);
+            // FIX: Explicitly type 'file' as File to access its 'name' property.
+            const newFiles = Array.from(event.target.files).map((file: File) => file.name);
             const task = tasks.find(t => t.id === taskToAttachFile);
             if(task) {
                 const updatedAttachments = [...new Set([...task.attachments, ...newFiles])];
@@ -100,7 +102,7 @@ const DailyReportModal: React.FC<DailyReportModalProps> = ({ isOpen, onClose, on
                             />
                             <div className="grid grid-cols-2 gap-4 mt-2">
                                 <div>
-                                    <label className="text-xs text-gray-400">Jam Pengerjaan</label>
+                                    <label className="text-xs text-text-secondary">Jam Pengerjaan</label>
                                     <input
                                         type="number"
                                         step="0.5"
@@ -112,7 +114,7 @@ const DailyReportModal: React.FC<DailyReportModalProps> = ({ isOpen, onClose, on
                                     />
                                 </div>
                                  <div>
-                                    <label className="text-xs text-gray-400">Lampiran</label>
+                                    <label className="text-xs text-text-secondary">Lampiran</label>
                                     <button onClick={() => triggerFileInput(task.id)} className="w-full text-center p-2 bg-secondary text-white text-sm rounded-md hover:bg-gray-500 disabled:opacity-50" disabled={readOnly}>Unggah File</button>
                                 </div>
                             </div>
@@ -142,7 +144,7 @@ const DailyReportModal: React.FC<DailyReportModalProps> = ({ isOpen, onClose, on
                                             <p className="text-gray-300">
                                                 <span className="font-bold">{log.user.name}</span> {log.action}
                                             </p>
-                                            <p className="text-gray-500">{formatTimestamp(log.timestamp)}</p>
+                                            <p className="text-text-primary">{formatTimestamp(log.timestamp)}</p>
                                         </div>
                                     </div>
                                 ))}

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
+// FIX: Corrected import path for types
 import { Lpj, LpjStatus, Project } from '../../../types';
 
 interface LpjModalProps {
@@ -31,7 +32,8 @@ const LpjModal: React.FC<LpjModalProps> = ({ isOpen, onClose, onSave, project })
 
     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         if (event.target.files) {
-            const newFiles = Array.from(event.target.files).map(file => file.name);
+            // FIX: Explicitly type 'file' as File to access its 'name' property.
+            const newFiles = Array.from(event.target.files).map((file: File) => file.name);
             setAttachments(prev => [...new Set([...prev, ...newFiles])]);
         }
     };

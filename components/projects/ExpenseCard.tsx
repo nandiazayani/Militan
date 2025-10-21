@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+// FIX: Corrected import path for types
 import { Expense, ExpenseStatus, Project, ProjectHistoryLog } from '../../types';
 import { ExpenseStatusBadge } from '../Badges';
 
@@ -70,7 +71,8 @@ const ExpenseCard: React.FC<ExpenseCardProps> = ({ expenses, projectName, onOpen
                         className="px-3 py-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary text-sm text-gray-900 dark:text-gray-100"
                     >
                         <option value="All">Semua Status</option>
-                        {Object.values(ExpenseStatus).map(s => <option key={s} value={s}>{s}</option>)}
+                        {/* FIX: Explicitly type 's' to resolve 'unknown' type error. */}
+                        {Object.values(ExpenseStatus).map((s: ExpenseStatus) => <option key={s} value={s}>{s}</option>)}
                     </select>
                 </div>
                 <div className="flex items-center gap-2">
@@ -87,7 +89,7 @@ const ExpenseCard: React.FC<ExpenseCardProps> = ({ expenses, projectName, onOpen
             </div>
             <div className="overflow-x-auto">
                 <table className="min-w-full">
-                    <thead className="text-xs text-gray-500 dark:text-gray-400 uppercase bg-gray-50 dark:bg-gray-700/50">
+                    <thead className="text-xs text-text-secondary uppercase bg-gray-50 dark:bg-gray-700/50">
                         <tr>
                             <th className="px-4 py-2 text-left">Item</th>
                             <th className="px-4 py-2 text-left">Jumlah</th>

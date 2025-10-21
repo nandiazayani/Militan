@@ -19,46 +19,11 @@ import CalendarPage from './modules/calendar/CalendarPage';
 import { Page, User, Project, Asset, Document as Doc, UserTask, Notification, NotificationType, DailyReport } from './types';
 import { MOCK_USERS, MOCK_PROJECTS, MOCK_ASSETS, MOCK_DOCUMENTS, MOCK_USER_TASKS, MOCK_NOTIFICATIONS, MOCK_DAILY_REPORTS } from './constants/mockData';
 
-// Contexts
-interface UserContextType {
-  user: User;
-  setUser: (user: User) => void;
-}
-export const UserContext = createContext<UserContextType | null>(null);
+// Import contexts from new files
+import { UserContext } from './contexts/UserContext';
+import { DataContext, DataContextType } from './contexts/DataContext';
+import { SettingsContext } from './contexts/SettingsContext';
 
-interface DataContextType {
-  allUsers: User[];
-  allProjects: Project[];
-  allAssets: Asset[];
-  allDocuments: Doc[];
-  allUserTasks: UserTask[];
-  allNotifications: Notification[];
-  allDailyReports: DailyReport[];
-  updateUser: (user: User) => Promise<void>;
-  addProject: (project: Project) => Promise<void>;
-  updateProject: (project: Project) => Promise<void>;
-  addAsset: (asset: Asset) => Promise<void>;
-  updateAsset: (asset: Asset) => Promise<void>;
-  deleteAsset: (assetId: string) => Promise<void>;
-  addDocument: (doc: Doc) => Promise<void>;
-  updateDocument: (doc: Doc) => Promise<void>;
-  deleteDocument: (docId: string) => Promise<void>;
-  addUser: (user: User) => Promise<void>;
-  addUserTask: (task: UserTask) => Promise<void>;
-  updateUserTask: (task: UserTask) => Promise<void>;
-  deleteUserTask: (taskId: string) => Promise<void>;
-  addNotification: (type: NotificationType, message: string, link?: Notification['link']) => void;
-  markNotificationsAsRead: () => void;
-  addDailyReport: (report: DailyReport) => Promise<void>;
-  updateDailyReport: (report: DailyReport) => Promise<void>;
-}
-export const DataContext = createContext<DataContextType | null>(null);
-
-interface SettingsContextType {
-  settings: { autoSaveEnabled: boolean };
-  setSettings: (settings: { autoSaveEnabled: boolean }) => void;
-}
-export const SettingsContext = createContext<SettingsContextType | null>(null);
 
 // Main App Component
 const App: React.FC = () => {

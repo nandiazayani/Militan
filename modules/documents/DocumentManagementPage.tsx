@@ -1,6 +1,8 @@
 
 import React, { useState, useContext } from 'react';
-import { DataContext, UserContext } from '../../App';
+// FIX: Corrected import paths for contexts to resolve type errors.
+import { DataContext } from '../../contexts/DataContext';
+import { UserContext } from '../../contexts/UserContext';
 import { Document, DocumentCategory, DocumentFileType, UserRole } from '../../types';
 import { GoogleGenAI } from "@google/genai";
 
@@ -238,7 +240,7 @@ const DocumentManagementPage: React.FC = () => {
                             <tr key={doc.id}>
                                 <td className="px-6 py-4 whitespace-nowrap">
                                     <div className="text-sm font-medium text-gray-100">{doc.name}</div>
-                                    <div className="text-xs text-gray-400">{doc.description}</div>
+                                    <div className="text-xs text-text-primary">{doc.description}</div>
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-400">{doc.category}</td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-400">v{doc.version}</td>

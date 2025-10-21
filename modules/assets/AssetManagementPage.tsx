@@ -1,5 +1,6 @@
 import React, { useState, useContext, useMemo } from 'react';
-import { DataContext } from '../../App';
+import { DataContext } from '../../contexts/DataContext';
+// FIX: Corrected import path for types
 import { Asset, AssetStatus, AssetType, User } from '../../types';
 import { AssetStatusBadge } from '../../components/Badges';
 
@@ -80,13 +81,15 @@ const AssetModal: React.FC<{
                     <div>
                         <label className="block text-sm font-medium text-gray-300">Tipe Aset</label>
                         <select value={type} onChange={(e) => setType(e.target.value as AssetType)} className="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary text-gray-100">
-                            {Object.values(AssetType).map(t => <option key={t} value={t}>{t}</option>)}
+                            {/* FIX: Explicitly type 't' to resolve 'unknown' type error. */}
+                            {Object.values(AssetType).map((t: AssetType) => <option key={t} value={t}>{t}</option>)}
                         </select>
                     </div>
                     <div>
                         <label className="block text-sm font-medium text-gray-300">Status Aset</label>
                         <select value={status} onChange={(e) => setStatus(e.target.value as AssetStatus)} className="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary text-gray-100">
-                            {Object.values(AssetStatus).map(s => <option key={s} value={s}>{s}</option>)}
+                            {/* FIX: Explicitly type 's' to resolve 'unknown' type error. */}
+                            {Object.values(AssetStatus).map((s: AssetStatus) => <option key={s} value={s}>{s}</option>)}
                         </select>
                     </div>
                     <div>
@@ -228,7 +231,7 @@ const AssetManagementPage: React.FC = () => {
                             <tr key={asset.id}>
                                 <td className="px-6 py-4 whitespace-nowrap">
                                     <div className="text-sm font-medium text-gray-100">{asset.name}</div>
-                                    <div className="text-xs text-gray-400">Dikelola oleh: {asset.managedBy.name}</div>
+                                    <div className="text-xs text-text-primary">Dikelola oleh: {asset.managedBy.name}</div>
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-400">{asset.type}</td>
                                 <td className="px-6 py-4 whitespace-nowrap">

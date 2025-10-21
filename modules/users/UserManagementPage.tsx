@@ -1,7 +1,8 @@
-
 import React, { useState, useContext } from 'react';
+// FIX: Corrected import path for types
 import { User, UserRole } from '../../types';
-import { UserContext, DataContext } from '../../App';
+import { UserContext } from '../../contexts/UserContext';
+import { DataContext } from '../../contexts/DataContext';
 import { RoleBadge } from '../../components/Badges';
 
 interface UserManagementPageProps {
@@ -58,7 +59,8 @@ const AddUserModal: React.FC<{
                     <div>
                         <label className="block text-sm font-medium text-gray-300">Peran (Role)</label>
                         <select value={role} onChange={(e) => setRole(e.target.value as UserRole)} className="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary text-gray-100">
-                            {Object.values(UserRole).map(r => <option key={r} value={r}>{r}</option>)}
+                            {/* FIX: Explicitly type 'r' to resolve 'unknown' type error. */}
+                            {Object.values(UserRole).map((r: UserRole) => <option key={r} value={r}>{r}</option>)}
                         </select>
                     </div>
                      <div>

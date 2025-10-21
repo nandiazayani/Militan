@@ -1,6 +1,7 @@
-
 import React, { useContext, useState } from 'react';
-import { UserContext, SettingsContext, DataContext } from '../../App';
+import { UserContext } from '../../contexts/UserContext';
+import { SettingsContext } from '../../contexts/SettingsContext';
+import { DataContext } from '../../contexts/DataContext';
 import EditProfileModal from '../../components/EditProfileModal';
 
 const SettingsToggle: React.FC<{ label: string; enabled: boolean; onToggle: () => void; }> = ({ label, enabled, onToggle }) => (

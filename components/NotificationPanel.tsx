@@ -1,5 +1,5 @@
 import React, { useContext } from 'react';
-import { DataContext } from '../App';
+import { DataContext } from '../contexts/DataContext';
 import { Notification, Page } from '../types';
 
 interface NotificationPanelProps {
@@ -62,7 +62,7 @@ const NotificationPanel: React.FC<NotificationPanelProps> = ({ onSelectProject, 
                                     )}
                                     <div className={`flex-1 ${notification.read ? 'pl-5' : ''}`}>
                                         <p className="text-sm text-gray-200">{notification.message}</p>
-                                        <p className="text-xs text-gray-400 mt-1">{timeSince(notification.timestamp)}</p>
+                                        <p className="text-xs text-text-primary mt-1">{timeSince(notification.timestamp)}</p>
                                     </div>
                                 </div>
                             </li>

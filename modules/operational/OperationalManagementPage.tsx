@@ -1,5 +1,7 @@
 import React, { useState, useContext, useMemo } from 'react';
-import { UserContext, DataContext } from '../../App';
+import { UserContext } from '../../contexts/UserContext';
+import { DataContext } from '../../contexts/DataContext';
+// FIX: Corrected import path for types
 import { User, UserRole, DailyReport, DailyReportStatus, DailyReportHistoryLog } from '../../types';
 import DailyReportModal from './modals/DailyReportModal';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
@@ -237,7 +239,8 @@ const OperationalManagementPage: React.FC = () => {
             return acc;
         }, {} as Record<string, number>);
 
-        const mostProductiveEmployee = Object.entries(productivityData).sort((a, b) => b[1] - a[1])[0];
+        // FIX: Explicitly type 'a' and 'b' in the sort callback to resolve the arithmetic operation error.
+        const mostProductiveEmployee = Object.entries(productivityData).sort((a: [string, number], b: [string, number]) => b[1] - a[1])[0];
 
         const departmentHours = reportsThisWeek.reduce((acc, report) => {
             const user = allUsers.find(u => u.id === report.userId);
@@ -311,7 +314,7 @@ const OperationalManagementPage: React.FC = () => {
                                         const { status, startTime } = getUserStatus(user);
                                         return (
                                             <tr key={user.id}>
-                                                <td className="px-6 py-4 whitespace-nowrap"><div className="flex items-center"><img className="h-10 w-10 rounded-full" src={user.avatarUrl} alt={user.name} /><div className="ml-4"><div className="text-sm font-medium text-gray-100">{user.name}</div><div className="text-xs text-gray-400">{user.role}</div></div></div></td>
+                                                <td className="px-6 py-4 whitespace-nowrap"><div className="flex items-center"><img className="h-10 w-10 rounded-full" src={user.avatarUrl} alt={user.name} /><div className="ml-4"><div className="text-sm font-medium text-gray-100">{user.name}</div><div className="text-xs text-text-primary">{user.role}</div></div></div></td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-400">{user.department}</td>
                                                 <td className="px-6 py-4 whitespace-nowrap"><span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${status === 'Aktif' ? 'bg-green-900/50 text-green-300' : 'bg-gray-600 text-gray-200'}`}>{status}</span></td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{startTime || '-'}</td>
