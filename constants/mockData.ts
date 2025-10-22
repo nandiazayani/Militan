@@ -53,6 +53,7 @@ export const MOCK_PROJECTS: Project[] = [
       { id: 'h1', timestamp: new Date().toISOString(), user: admin, action: 'membuat proyek.' },
       { id: 'h2', timestamp: new Date().toISOString(), user: manager, action: 'menambahkan vendor Gema Suara.' },
     ],
+    handoverHistory: [],
     usedAssets: [
         { asset: MOCK_ASSETS[1], checkoutDate: '2024-07-15T10:00:00Z' }
     ]
@@ -70,6 +71,7 @@ export const MOCK_PROJECTS: Project[] = [
     expenses: [],
     tasks: [],
     history: [],
+    handoverHistory: [],
   },
   {
     id: 'p3',
@@ -84,6 +86,7 @@ export const MOCK_PROJECTS: Project[] = [
     expenses: [{ id: 'e4', item: 'Platform Webinar', amount: 5000000, date: '2024-06-05', status: ExpenseStatus.Approved }],
     tasks: [],
     history: [],
+    handoverHistory: [],
     lpj: {
       id: 'lpj1',
       status: LpjStatus.Approved,
@@ -111,6 +114,7 @@ export const MOCK_PROJECTS: Project[] = [
     expenses: [],
     tasks: [],
     history: [],
+    handoverHistory: [],
   },
 ];
 

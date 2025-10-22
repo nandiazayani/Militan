@@ -1,7 +1,7 @@
 import React, { useContext, useState, useMemo, useCallback } from 'react';
 import { DataContext } from '../../contexts/DataContext';
 import { UserContext } from '../../contexts/UserContext';
-import { Project, User, Vendor, Expense, ProjectTask, UserRole, ProjectHistoryLog, Lpj, UsedAssetLog, Asset, AssetStatus } from '../../types';
+import { Project, User, Vendor, Expense, ProjectTask, UserRole, ProjectHistoryLog, Lpj, UsedAssetLog, Asset, AssetStatus, HandoverLog } from '../../types';
 
 import ProjectHeader from '../../components/projects/ProjectHeader';
 import ProjectOverview from '../../components/projects/ProjectOverview';
@@ -10,6 +10,7 @@ import VendorCard from '../../components/projects/VendorCard';
 import TaskCard from '../../components/projects/TaskCard';
 import ExpenseCard from '../../components/projects/ExpenseCard';
 import HistoryCard from '../../components/projects/HistoryCard';
+import HandoverHistoryCard from '../../components/projects/HandoverHistoryCard';
 import LpjCard from '../../components/projects/LpjCard';
 import GeminiProjectAssistant from '../../components/projects/GeminiProjectAssistant';
 import ProjectAssetLogCard from '../../components/projects/ProjectAssetLogCard';
@@ -19,6 +20,7 @@ import ExpenseModal from './modals/ExpenseModal';
 import TaskModal from './modals/TaskModal';
 import LpjModal from './modals/LpjModal';
 import CheckoutAssetModal from './modals/CheckoutAssetModal';
+import HandoverModal from './modals/HandoverModal';
 
 
 interface ProjectDetailPageProps {
@@ -28,7 +30,7 @@ interface ProjectDetailPageProps {
     setHasUnsavedChanges: (hasChanges: boolean) => void;
 }
 
-type ModalType = 'vendor' | 'expense' | 'task' | 'lpj' | 'checkoutAsset';
+type ModalType = 'vendor' | 'expense' | 'task' | 'lpj' | 'checkoutAsset' | 'handover';
 
 const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({ projectId, onBack, onSelectUser, setHasUnsavedChanges }) => {
     const dataContext = useContext(DataContext);
@@ -39,14 +41,22 @@ const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({ projectId, onBack
     const project = useMemo(() => {
         return dataContext?.allProjects.find(p => p.id === projectId);
     }, [dataContext?.allProjects, projectId]);
+    
+    const { user: currentUser } = userContext!;
+    
+    const pendingHandover = useMemo(() => {
+        if (!project || !project.handoverHistory) return null;
+        return project.handoverHistory.find(h => h.toPIC.id === currentUser.id && !h.confirmationTimestamp);
+    }, [project, currentUser]);
+
 
     if (!dataContext || !userContext || !project) {
         return <div>Loading project details... or project not found.</div>;
     }
     const { updateProject, allUsers, addNotification, allAssets, updateAsset } = dataContext;
-    const { user: currentUser } = userContext;
 
     const canEdit = currentUser.role === UserRole.Admin || currentUser.role === UserRole.Manager || project.pic.id === currentUser.id;
+    const canInitiateHandover = canEdit;
 
     const createHistoryLog = useCallback((action: string): ProjectHistoryLog => ({
         id: `h-${Date.now()}`,
@@ -108,13 +118,66 @@ const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({ projectId, onBack
             }), historyLog);
             updateAsset({ ...asset, status: AssetStatus.InUse });
             handleCloseModal();
+        },
+        handover: (newPIC: User, briefingContent: string) => {
+            const handoverLog: HandoverLog = {
+                id: `ho-${Date.now()}`,
+                timestamp: new Date().toISOString(),
+                fromPIC: project.pic,
+                toPIC: newPIC,
+                briefingContent,
+            };
+            const historyLog = createHistoryLog(`memulai serah terima PIC dari ${project.pic.name} kepada ${newPIC.name}.`);
+            
+            handleUpdateProject(prev => ({
+                pic: newPIC,
+                handoverHistory: [...(prev.handoverHistory || []), handoverLog]
+            }), historyLog);
+
+            addNotification(
+                'handover_request',
+                `${project.pic.name} telah menunjuk Anda sebagai PIC baru untuk proyek "${project.name}".`,
+                { page: 'projects', id: project.id }
+            );
+
+            handleCloseModal();
         }
     };
     
+    const handleConfirmHandover = () => {
+        if (!pendingHandover) return;
+        
+        const log = createHistoryLog(`mengonfirmasi penerimaan tanggung jawab sebagai PIC.`);
+        handleUpdateProject(prev => ({
+            handoverHistory: (prev.handoverHistory || []).map(h => 
+                h.id === pendingHandover.id ? { ...h, confirmationTimestamp: new Date().toISOString() } : h
+            )
+        }), log);
+
+        addNotification(
+            'general',
+            `Serah terima PIC untuk proyek "${project.name}" kepada ${currentUser.name} telah selesai.`,
+            { page: 'projects', id: project.id }
+        );
+    };
+
     return (
         <div className="space-y-6">
             <ProjectHeader project={project} onBack={onBack} onSave={() => alert('Save clicked')} canEdit={canEdit} />
-            <ProjectOverview project={project} onSelectUser={onSelectUser} />
+
+            {pendingHandover && (
+                <div className="bg-primary/20 border border-primary text-primary-content p-4 rounded-lg flex items-center justify-between">
+                    <div>
+                        <h4 className="font-bold">Konfirmasi Serah Terima</h4>
+                        <p className="text-sm">Anda ditunjuk sebagai PIC baru untuk proyek ini. Harap tinjau briefing dan konfirmasi.</p>
+                    </div>
+                    <button onClick={handleConfirmHandover} className="px-4 py-2 bg-primary text-black font-semibold rounded-lg hover:bg-yellow-500 transition">
+                        Tinjau & Konfirmasi
+                    </button>
+                </div>
+            )}
+            
+            <ProjectOverview project={project} onSelectUser={onSelectUser} onHandoverClick={() => handleOpenModal('handover')} canInitiateHandover={canInitiateHandover} />
 
             <GeminiProjectAssistant project={project} />
 
@@ -134,6 +197,7 @@ const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({ projectId, onBack
                         canEdit={canEdit}
                     />
                     <LpjCard project={project} onOpenModal={() => handleOpenModal('lpj')} onUpdateProject={handleUpdateProject} createHistoryLog={createHistoryLog} />
+                    <HandoverHistoryCard handoverHistory={project.handoverHistory || []} />
                     <HistoryCard history={project.history} />
                 </div>
             </div>
@@ -143,6 +207,7 @@ const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({ projectId, onBack
             {modalState.type === 'task' && <TaskModal isOpen={true} onClose={handleCloseModal} onSave={handleSave.task} task={modalState.data} projectTeam={[project.pic, ...project.team]} allTasks={project.tasks} />}
             {modalState.type === 'lpj' && <LpjModal isOpen={true} onClose={handleCloseModal} onSave={handleSave.lpj} project={project} />}
             {modalState.type === 'checkoutAsset' && <CheckoutAssetModal isOpen={true} onClose={handleCloseModal} onCheckout={handleSave.checkoutAsset} allAssets={allAssets} />}
+            {modalState.type === 'handover' && <HandoverModal isOpen={true} onClose={handleCloseModal} onSave={handleSave.handover} project={project} allUsers={allUsers} />}
         </div>
     );
 };

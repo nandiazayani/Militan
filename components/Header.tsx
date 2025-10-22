@@ -12,9 +12,10 @@ interface HeaderProps {
   onLogout: () => void;
   onSelectProject: (projectId: string) => void;
   onSelectUser: (userId: string) => void;
+  onToggleSidebar: () => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ setCurrentPage, hasUnsavedChanges, onLogout, onSelectProject, onSelectUser }) => {
+const Header: React.FC<HeaderProps> = ({ setCurrentPage, hasUnsavedChanges, onLogout, onSelectProject, onSelectUser, onToggleSidebar }) => {
   const userContext = useContext(UserContext);
   const dataContext = useContext(DataContext);
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -69,6 +70,13 @@ const Header: React.FC<HeaderProps> = ({ setCurrentPage, hasUnsavedChanges, onLo
   return (
     <header className="flex items-center justify-between p-4 bg-surface shadow-md z-20">
       <div className="flex items-center">
+        <button 
+          onClick={onToggleSidebar} 
+          className="p-2 mr-2 rounded-md text-gray-300 hover:bg-gray-700 md:hidden"
+          aria-label="Open sidebar"
+        >
+            <MenuIcon />
+        </button>
         <h2 className="text-2xl font-semibold text-text-primary hidden md:block">Welcome, {user.name}!</h2>
       </div>
       <div className="flex-1 flex justify-center px-4">
@@ -133,6 +141,7 @@ const Header: React.FC<HeaderProps> = ({ setCurrentPage, hasUnsavedChanges, onLo
   );
 };
 
+const MenuIcon: React.FC<{ className?: string }> = ({ className }) => <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={`w-6 h-6 ${className}`}><path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" /></svg>;
 const BellIcon: React.FC<{ className?: string }> = ({ className }) => <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={`w-6 h-6 ${className}`}><path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" /></svg>;
 const ChevronDownIcon: React.FC<{ className?: string }> = ({ className }) => <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={`w-5 h-5 ${className}`}><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" /></svg>;
 const CloudWarningIcon: React.FC<{ className?: string }> = ({ className }) => <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={`w-6 h-6 ${className}`}><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" /></svg>;

@@ -6,6 +6,8 @@ import { UserContext } from '../contexts/UserContext';
 interface SidebarProps {
   currentPage: Page;
   setCurrentPage: (page: Page) => void;
+  isSidebarOpen: boolean;
+  setIsSidebarOpen: (isOpen: boolean) => void;
 }
 
 const NavItem: React.FC<{
@@ -15,7 +17,8 @@ const NavItem: React.FC<{
   icon: React.ReactElement<{ className?: string }>;
   currentPage: Page;
   setCurrentPage: (page: Page) => void;
-}> = ({ page, label, icon, currentPage, setCurrentPage }) => {
+  setIsSidebarOpen: (isOpen: boolean) => void;
+}> = ({ page, label, icon, currentPage, setCurrentPage, setIsSidebarOpen }) => {
   const isActive = currentPage === page;
   return (
     <li>
@@ -24,6 +27,7 @@ const NavItem: React.FC<{
         onClick={(e) => {
           e.preventDefault();
           setCurrentPage(page);
+          setIsSidebarOpen(false); // Close sidebar on mobile after navigation
         }}
         className={`flex items-center space-x-3 p-3 rounded-lg cursor-pointer transition-colors ${
           isActive ? 'bg-primary text-black font-bold shadow-lg' : 'text-gray-300 hover:bg-gray-700'
@@ -67,7 +71,7 @@ const PAGE_PERMISSIONS: Record<UserRole, Page[]> = {
 };
 
 
-const Sidebar: React.FC<SidebarProps> = ({ currentPage, setCurrentPage }) => {
+const Sidebar: React.FC<SidebarProps> = ({ currentPage, setCurrentPage, isSidebarOpen, setIsSidebarOpen }) => {
   const userContext = useContext(UserContext);
   if (!userContext) return null; // Should not happen in a logged-in state
   const { user } = userContext;
@@ -96,7 +100,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentPage, setCurrentPage }) => {
 
 
   return (
-    <aside className="w-64 bg-surface-secondary flex-shrink-0 p-4 flex flex-col shadow-lg">
+    <aside className={`fixed inset-y-0 left-0 z-40 w-64 bg-surface flex-shrink-0 p-4 flex flex-col shadow-lg transform transition-transform duration-300 ease-in-out md:static md:translate-x-0 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
       <div className="flex items-center gap-3 p-3 mb-6">
         <img src="/logo.png" alt="Mili Cipta Karya" className="h-10 w-10" />
         <h1 className="text-xl font-bold text-text-primary whitespace-nowrap">MILITAN DASH</h1>
@@ -105,7 +109,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentPage, setCurrentPage }) => {
         <h2 className="px-3 text-xs font-semibold text-text-secondary uppercase tracking-wider mb-2">Utama</h2>
         <ul className="space-y-2">
           {visibleMainNavItems.map(item => (
-            <NavItem key={item.page} {...item} currentPage={currentPage} setCurrentPage={setCurrentPage} />
+            <NavItem key={item.page} {...item} currentPage={currentPage} setCurrentPage={setCurrentPage} setIsSidebarOpen={setIsSidebarOpen} />
           ))}
         </ul>
         {visibleAdditionalNavItems.length > 0 && (
@@ -113,7 +117,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentPage, setCurrentPage }) => {
             <h2 className="px-3 mt-8 text-xs font-semibold text-text-secondary uppercase tracking-wider mb-2">Tambahan</h2>
             <ul className="space-y-2">
               {visibleAdditionalNavItems.map(item => (
-                <NavItem key={item.page} {...item} currentPage={currentPage} setCurrentPage={setCurrentPage} />
+                <NavItem key={item.page} {...item} currentPage={currentPage} setCurrentPage={setCurrentPage} setIsSidebarOpen={setIsSidebarOpen} />
               ))}
             </ul>
           </>
@@ -121,8 +125,8 @@ const Sidebar: React.FC<SidebarProps> = ({ currentPage, setCurrentPage }) => {
       </nav>
       <div className="mt-auto">
         <ul className="space-y-2">
-          <NavItem page="notifications" label="Notifikasi" icon={<BellIcon />} currentPage={currentPage} setCurrentPage={setCurrentPage} />
-          <NavItem page="settings" label="Pengaturan" icon={<CogIcon />} currentPage={currentPage} setCurrentPage={setCurrentPage} />
+          <NavItem page="notifications" label="Notifikasi" icon={<BellIcon />} currentPage={currentPage} setCurrentPage={setCurrentPage} setIsSidebarOpen={setIsSidebarOpen} />
+          <NavItem page="settings" label="Pengaturan" icon={<CogIcon />} currentPage={currentPage} setCurrentPage={setCurrentPage} setIsSidebarOpen={setIsSidebarOpen} />
         </ul>
       </div>
     </aside>

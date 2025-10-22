@@ -83,6 +83,15 @@ export interface ProjectHistoryLog {
   action: string;
 }
 
+export interface HandoverLog {
+    id: string;
+    timestamp: string; // ISO String for initiation
+    fromPIC: User;
+    toPIC: User;
+    briefingContent: string; // AI-generated briefing
+    confirmationTimestamp?: string; // ISO String for confirmation
+}
+
 export enum LpjStatus {
   Approved = 'Approved',
   Submitted = 'Submitted',
@@ -126,6 +135,7 @@ export interface Project {
   expenses: Expense[];
   tasks: ProjectTask[];
   history: ProjectHistoryLog[];
+  handoverHistory?: HandoverLog[];
   lpj?: Lpj;
   usedAssets?: UsedAssetLog[];
 }
@@ -171,7 +181,8 @@ export interface Document {
 }
 
 // Notification related types
-export type NotificationType = 'general' | 'new_project' | 'task_completed';
+export type NotificationType = 'general' | 'new_project' | 'task_completed' | 'handover_request';
+
 
 export interface Notification {
   id: string;

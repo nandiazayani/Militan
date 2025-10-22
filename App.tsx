@@ -33,6 +33,7 @@ const App: React.FC = () => {
     const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
     const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
     const [hasUnsavedChanges, setHasUnsavedChanges] = useState<boolean>(false);
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     
     // "Database" state
     const [allUsers, setAllUsers] = useState<User[]>([]);
@@ -186,8 +187,13 @@ const App: React.FC = () => {
         <UserContext.Provider value={{ user, setUser }}>
             <DataContext.Provider value={dataContextValue}>
                 <SettingsContext.Provider value={{ settings, setSettings }}>
-                    <div className="flex h-screen bg-background text-text-primary font-sans">
-                        <Sidebar currentPage={currentPage} setCurrentPage={setCurrentPage} />
+                    <div className="relative flex h-screen bg-background text-text-primary font-sans">
+                        <Sidebar 
+                            currentPage={currentPage} 
+                            setCurrentPage={setCurrentPage}
+                            isSidebarOpen={isSidebarOpen}
+                            setIsSidebarOpen={setIsSidebarOpen}
+                        />
                         <div className="flex-1 flex flex-col overflow-hidden">
                             <Header 
                                 setCurrentPage={setCurrentPage}
@@ -195,11 +201,19 @@ const App: React.FC = () => {
                                 onLogout={handleLogout}
                                 onSelectProject={handleSelectProject}
                                 onSelectUser={handleSelectUser}
+                                onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
                             />
                             <main className="flex-1 overflow-x-hidden overflow-y-auto bg-background p-6">
                                 {renderPage()}
                             </main>
                         </div>
+                        {isSidebarOpen && (
+                            <div
+                                className="fixed inset-0 bg-black bg-opacity-50 z-30 md:hidden"
+                                onClick={() => setIsSidebarOpen(false)}
+                                aria-hidden="true"
+                            ></div>
+                        )}
                     </div>
                 </SettingsContext.Provider>
             </DataContext.Provider>
