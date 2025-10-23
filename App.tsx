@@ -12,6 +12,7 @@ import SettingsPage from './modules/settings/SettingsPage';
 import LoginPage from './modules/login/LoginPage';
 import GeminiPage from './modules/gemini/GeminiPage';
 import AdditionalDepartmentsPage from './modules/departments/AdditionalDepartmentsPage';
+import DepartmentDetailPage from './modules/departments/DepartmentDetailPage'; // Import the new page
 import OperationalManagementPage from './modules/operational/OperationalManagementPage';
 import NotificationPage from './modules/notifications/NotificationPage';
 import CalendarPage from './modules/calendar/CalendarPage';
@@ -32,6 +33,7 @@ const App: React.FC = () => {
     const [currentPage, setCurrentPage] = useState<Page>('dashboard');
     const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
     const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+    const [selectedDepartmentId, setSelectedDepartmentId] = useState<string | null>(null); // State for selected department
     const [hasUnsavedChanges, setHasUnsavedChanges] = useState<boolean>(false);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     
@@ -123,6 +125,11 @@ const App: React.FC = () => {
         setSelectedUserId(userId);
         setCurrentPage('userDetail');
     };
+    
+    const handleSelectDepartment = (departmentId: string) => {
+        setSelectedDepartmentId(departmentId);
+        setCurrentPage('departmentDetail');
+    };
 
     const handleBackToProjects = () => {
         setSelectedProjectId(null);
@@ -132,6 +139,11 @@ const App: React.FC = () => {
     const handleBackToUsers = () => {
         setSelectedUserId(null);
         setCurrentPage('users');
+    };
+
+    const handleBackToDepartments = () => {
+        setSelectedDepartmentId(null);
+        setCurrentPage('departments');
     };
     
     const handleLogin = (loggedInUser: User) => {
@@ -155,6 +167,9 @@ const App: React.FC = () => {
         if (currentPage === 'userDetail' && selectedUserId) {
             return <UserDetailPage userId={selectedUserId} onBack={handleBackToUsers} />;
         }
+        if (currentPage === 'departmentDetail' && selectedDepartmentId) {
+            return <DepartmentDetailPage departmentName={selectedDepartmentId} onBack={handleBackToDepartments} onSelectProject={handleSelectProject} onSelectUser={handleSelectUser} />;
+        }
         switch (currentPage) {
             case 'dashboard': return <DashboardPage />;
             case 'projects': return <ProjectManagementPage onSelectProject={handleSelectProject} />;
@@ -163,7 +178,7 @@ const App: React.FC = () => {
             case 'users': return <UserManagementPage onSelectUser={handleSelectUser} />;
             case 'settings': return <SettingsPage />;
             case 'gemini': return <GeminiPage />;
-            case 'departments': return <AdditionalDepartmentsPage />;
+            case 'departments': return <AdditionalDepartmentsPage onSelectDepartment={handleSelectDepartment} />;
             case 'operational': return <OperationalManagementPage />;
             case 'notifications': return <NotificationPage onSelectProject={handleSelectProject} onSelectUser={handleSelectUser} />;
             case 'calendar': return <CalendarPage onSelectProject={handleSelectProject} onSelectUser={handleSelectUser} />;

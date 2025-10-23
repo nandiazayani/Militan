@@ -28,6 +28,8 @@ const AddProjectModal: React.FC<{ isOpen: boolean; onClose: () => void; onSave: 
             id: `p${Date.now()}`,
             name,
             pic,
+            // FIX: Added 'department' from the selected PIC to satisfy the Project type.
+            department: pic.department,
             startDate,
             endDate,
             status: ProjectStatus.Pitching,
